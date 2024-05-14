@@ -1,0 +1,39 @@
+package com_awake_CloserLink.Dto.Respons;
+
+/**
+ * @Author 清醒
+ * @Date 2024/5/14 10:01
+ */
+
+import lombok.Data;
+
+/**
+ * 用户响应类*/
+@Data
+public class UserRespDTO {
+    /**
+     * ID
+     */
+    private String id;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+
+    /**
+     * 真实姓名
+     */
+    private String realName;
+
+    /**
+     * 手机号
+     */
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    private String mail;
+}

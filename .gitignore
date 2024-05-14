@@ -1,0 +1,3 @@
+# Project exclude paths
+/admin/target/
+/project/target/
