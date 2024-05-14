@@ -1,7 +1,9 @@
 package com_awake_CloserLink.Controler;
 
+import cn.hutool.core.bean.BeanUtil;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
+import com_awake_CloserLink.Dto.Respons.UserActualRespDTO;
 import com_awake_CloserLink.Dto.Respons.UserRespDTO;
 import com_awake_CloserLink.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +25,15 @@ public class UserController {
     public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username) {
 
         UserRespDTO usernameByUserName = userService.getUsernameByUserName(username);
-        if (usernameByUserName != null) {
-            return Results.success(usernameByUserName);
-        } else {
-            return null;
-        }
-
+        return Results.success(usernameByUserName);
     }
+
+
+    @GetMapping("/api/shortlink/v1/actual/user/{username}")
+    public Result<UserActualRespDTO> getUserActualByUsername(@PathVariable("username") String username) {
+        UserRespDTO usernameByUserName = userService.getUsernameByUserName(username);
+        return Results.success(BeanUtil.toBean(usernameByUserName, UserActualRespDTO.class));
+    }
+
 
 }
