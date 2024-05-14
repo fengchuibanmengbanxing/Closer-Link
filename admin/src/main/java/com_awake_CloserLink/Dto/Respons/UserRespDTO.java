@@ -5,6 +5,8 @@ package com_awake_CloserLink.Dto.Respons;
  * @Date 2024/5/14 10:01
  */
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com_awake_CloserLink.Common.Serializ.PhoneDesensitizationSerializer;
 import lombok.Data;
 
 /**
@@ -30,6 +32,7 @@ public class UserRespDTO {
     /**
      * 手机号
      */
+    @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
 
     /**
