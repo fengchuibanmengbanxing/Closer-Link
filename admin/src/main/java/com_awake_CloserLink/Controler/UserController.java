@@ -19,7 +19,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-
+    //查询脱敏用户信息
     @GetMapping("/api/short-link/v1/user/{username}")
     public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username) {
 
@@ -27,19 +27,21 @@ public class UserController {
         return Results.success(usernameByUserName);
     }
 
-
+    //查询用户信息
     @GetMapping("/api/short-link/v1/actual/user/{username}")
     public Result<UserActualRespDTO> getUserActualByUsername(@PathVariable("username") String username) {
         UserRespDTO usernameByUserName = userService.getUsernameByUserName(username);
         return Results.success(BeanUtil.toBean(usernameByUserName, UserActualRespDTO.class));
     }
-
+   //查看用户名是否存在
     @GetMapping("/api/short-link/v1/actual/has-username/{username}")
     public Result<Boolean> IsHasUsername(@PathVariable("username") String username) {
        Boolean isHasUsername = userService.isHasUsername(username);
        return Results.success(isHasUsername);
     }
-    //注册用户
+
+
+    //注册新用户
     @PostMapping("/api/short-link/v1/user")
     public Result<Void> IsHasUsername(@RequestBody UserRegister userRegister) {
         userService.register(userRegister);
