@@ -8,10 +8,10 @@ import lombok.Data;
  */
 @Data
 public class UserRegister {
-    /**
-     * ID
-     */
-    private String id;
+//    /**
+//     * ID
+//     */
+//    private String id;
 
     /**
      * 用户名
