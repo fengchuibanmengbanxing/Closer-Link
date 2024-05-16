@@ -1,13 +1,22 @@
 package com_awake_CloserLink.Entitys;
 
+import com.baomidou.mybatisplus.annotation.TableName;
+import com_awake_CloserLink.Common.Database.BaseDO;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @Author 清醒
  * @Date 2024/5/16 20:28
  */
 @Data
-public class GroupDO {
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@TableName("t_group")
+public class GroupDO extends BaseDO {
     /**
      * ID
      */
@@ -33,18 +42,6 @@ public class GroupDO {
      */
     private String sortOrder;
 
-    /**
-     * 创建时间
-     */
-    private String createTime;
 
-    /**
-     * 修改时间
-     */
-    private String updateTime;
 
-    /**
-     * 删除标识 0：未删除 1：已删除
-     */
-    private String delFlag;
 }
