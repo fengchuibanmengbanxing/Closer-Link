@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 
 @Data
@@ -58,19 +59,19 @@ public class UserDO implements Serializable {
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
-    private String createTime;
+    private Date createTime;
 
     /**
      * 修改时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private String updateTime;
+    private Date updateTime;
 
     /**
      * 删除标识 0：未删除 1：已删除
      */
     @TableField(fill = FieldFill.INSERT)
-    private String delFlag;
+    private Integer delFlag;
 
     public UserDO() {}
 }
