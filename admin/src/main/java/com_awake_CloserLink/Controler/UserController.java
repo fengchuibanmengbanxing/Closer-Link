@@ -3,8 +3,11 @@ package com_awake_CloserLink.Controler;
 import cn.hutool.core.bean.BeanUtil;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
+import com_awake_CloserLink.Dto.Request.UserLoginReqDTO;
 import com_awake_CloserLink.Dto.Request.UserRegister;
+import com_awake_CloserLink.Dto.Request.UserUpdateReqDTO;
 import com_awake_CloserLink.Dto.Respons.UserActualRespDTO;
+import com_awake_CloserLink.Dto.Respons.UserLoginRespDTO;
 import com_awake_CloserLink.Dto.Respons.UserRespDTO;
 import com_awake_CloserLink.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,11 +46,37 @@ public class UserController {
 
     //注册新用户
     @PostMapping("/api/short-link/v1/user")
-    public Result<Void> IsHasUsername(@RequestBody UserRegister userRegister) {
+    public Result<Void> UserRegister(@RequestBody UserRegister userRegister) {
         userService.register(userRegister);
         return Results.success();
     }
 
+    //修改用户信息
+    @PutMapping("/api/short-link/v1/user")
+    public Result<Void> UpdateUser(@RequestBody UserUpdateReqDTO userUpdateReqDTO) {
+        int i = userService.update_user(userUpdateReqDTO);
+        if (i == 0) {
+            return Results.failure();
+        }
+        return Results.success();
+    }
+    //用户登录
+    @PostMapping("/api/short-link/v1/user/login")
+    public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO userLoginReqDTO) {
+        UserLoginRespDTO userLoginRespDTO = userService.login(userLoginReqDTO);
+        return Results.success(userLoginRespDTO);
+    }
+    //校验用户登录状态
+    @GetMapping("/api/short-link/v1/user/check-login")
+    public Result<Boolean> checkLogin(@RequestParam("token")String token,@RequestParam("username")String username) {
+        Boolean check=userService.checkLogin(token,username);
+        return Results.success(check);
+    }
 
-
+    //用户登录退出
+    @DeleteMapping ("/api/short-link/v1/user/logout")
+    public Result<Void> logout(@RequestParam("token")String token,@RequestParam("username")String username) {
+       userService.logout(token,username);
+        return Results.success();
+    }
 }
