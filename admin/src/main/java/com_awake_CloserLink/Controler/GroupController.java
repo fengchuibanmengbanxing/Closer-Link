@@ -3,13 +3,11 @@ package com_awake_CloserLink.Controler;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
 import com_awake_CloserLink.Dto.Request.ShortLinkSaveGroupReqDTO;
+import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
 import com_awake_CloserLink.Dto.Respons.ShortLinkGroupRespDTO;
 import com_awake_CloserLink.Service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -42,4 +40,16 @@ public class GroupController {
         List<ShortLinkGroupRespDTO> list=groupService.listGroup();
         return Results.success(list);
     }
+
+    /**
+     * 修改短链接分组信息
+     * @return
+     */
+    @PutMapping("/api/short-link/v1/group")
+    public Result<List<ShortLinkGroupRespDTO>> updateGroup(@RequestBody ShortLinkUpdateGroupReqDTO shortLinkUpdateGroupReqDTO){
+        groupService.updateGroup(shortLinkUpdateGroupReqDTO);
+        return Results.success(null);
+    }
+
+
 }

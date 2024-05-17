@@ -2,9 +2,11 @@ package com_awake_CloserLink.Service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com_awake_CloserLink.Common.Biz.UserContext;
+import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
 import com_awake_CloserLink.Dto.Respons.ShortLinkGroupRespDTO;
 import com_awake_CloserLink.Entitys.GroupDO;
 import com_awake_CloserLink.Mapper.GroupMapper;
@@ -39,12 +41,14 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         }
         GroupDO groupDO = GroupDO.builder()
                 .gid(gid)
-                .name(UserContext.getUsername())
+                .name(groupName)
+                .username(UserContext.getUsername())
                 .sortOrder(0)
                 .build();
         baseMapper.insert(groupDO);
     }
 
+    //根据用户名获取短链接集合
     @Override
     public List<ShortLinkGroupRespDTO> listGroup() {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
@@ -56,6 +60,21 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     }
 
 
+    //修改短链接分组用户名
+    @Override
+    public void updateGroup(ShortLinkUpdateGroupReqDTO shortLinkUpdateGroupReqDTO) {
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getGid, shortLinkUpdateGroupReqDTO.getGid())
+                .eq(GroupDO::getDelFlag, 0);
+
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(shortLinkUpdateGroupReqDTO.getGroupName());
+        baseMapper.update(groupDO,updateWrapper);
+    }
+
+
+
     //判断是否生成的gid是否重复
     private boolean hasGid(String gid) {
         //TODO 获取用户名
@@ -64,5 +83,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getName,UserContext.getUsername());
         return baseMapper.selectOne(queryWrapper) != null;
     }
+
+
 
 }
