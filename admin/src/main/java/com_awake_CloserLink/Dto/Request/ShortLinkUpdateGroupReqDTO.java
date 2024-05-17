@@ -8,6 +8,6 @@ import lombok.Data;
  */
 @Data
 public class ShortLinkUpdateGroupReqDTO {
-    private Integer gid;
+    private String gid;
     private String groupName;
 }
