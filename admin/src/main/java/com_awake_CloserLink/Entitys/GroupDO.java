@@ -40,7 +40,7 @@ public class GroupDO extends BaseDO {
     /**
      * 分组排序
      */
-    private String sortOrder;
+    private Integer sortOrder;
 
 
 
