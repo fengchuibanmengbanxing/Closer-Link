@@ -52,9 +52,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Override
     public List<ShortLinkGroupRespDTO> listGroup() {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getDelFlag,0)
+                .eq(GroupDO::getDelFlag, 0)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
-                .orderByDesc(GroupDO::getSortOrder,GroupDO::getUpdateTime);
+                .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
         List<GroupDO> groupDOS = baseMapper.selectList(queryWrapper);
         return BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
     }
@@ -70,9 +70,21 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
         GroupDO groupDO = new GroupDO();
         groupDO.setName(shortLinkUpdateGroupReqDTO.getGroupName());
-        baseMapper.update(groupDO,updateWrapper);
+        baseMapper.update(groupDO, updateWrapper);
     }
 
+
+    //删除短链接分组信息
+    @Override
+    public void deleteGroup(String gid) {
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getDelFlag, 0);
+        GroupDO groupDO = new GroupDO();
+        groupDO.setDelFlag(1);
+        baseMapper.update(groupDO, updateWrapper);
+    }
 
 
     //判断是否生成的gid是否重复
@@ -80,10 +92,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         //TODO 获取用户名
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getName,UserContext.getUsername());
+                .eq(GroupDO::getName, UserContext.getUsername());
         return baseMapper.selectOne(queryWrapper) != null;
     }
-
 
 
 }

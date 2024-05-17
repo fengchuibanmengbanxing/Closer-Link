@@ -46,10 +46,20 @@ public class GroupController {
      * @return
      */
     @PutMapping("/api/short-link/v1/group")
-    public Result<List<ShortLinkGroupRespDTO>> updateGroup(@RequestBody ShortLinkUpdateGroupReqDTO shortLinkUpdateGroupReqDTO){
+    public Result<Void> updateGroup(@RequestBody ShortLinkUpdateGroupReqDTO shortLinkUpdateGroupReqDTO){
         groupService.updateGroup(shortLinkUpdateGroupReqDTO);
-        return Results.success(null);
+        return Results.success();
     }
 
+    /**
+     * 删除短链接分组名
+     * @param
+     * @return
+     */
+    @DeleteMapping("/api/short-link/v1/group")
+    public Result<Void> deleteGroup(@RequestParam("gid")String gid){
+        groupService.deleteGroup(gid);
+        return Results.success();
+    }
 
 }
