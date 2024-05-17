@@ -8,6 +8,6 @@ import lombok.Data;
  */
 @Data
 public class ShortLinkSaveGroupReqDTO {
-    private String name;
+    private String groupName;
 
 }
