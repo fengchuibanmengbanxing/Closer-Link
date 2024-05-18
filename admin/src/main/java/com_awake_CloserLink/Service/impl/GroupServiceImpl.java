@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com_awake_CloserLink.Common.Biz.UserContext;
+import com_awake_CloserLink.Dto.Request.ShortLinkSortGroupReqDTO;
 import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
 import com_awake_CloserLink.Dto.Respons.ShortLinkGroupRespDTO;
 import com_awake_CloserLink.Entitys.GroupDO;
@@ -84,6 +85,20 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = new GroupDO();
         groupDO.setDelFlag(1);
         baseMapper.update(groupDO, updateWrapper);
+    }
+
+    //对分组信息排序
+    @Override
+    public void sortGroup(List<ShortLinkSortGroupReqDTO> shortLinkSortGroupReqDTOList) {
+        shortLinkSortGroupReqDTOList.forEach(shortLinkSortGroupReqDTO -> {
+            LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                    .eq(GroupDO::getGid, shortLinkSortGroupReqDTO.getGid())
+                    .eq(GroupDO::getUsername, UserContext.getUsername())
+                    .eq(GroupDO::getDelFlag, 0);
+            GroupDO groupDO = new GroupDO();
+            groupDO.setSortOrder(shortLinkSortGroupReqDTO.getSortOrder());
+            baseMapper.update(groupDO, updateWrapper);
+        });
     }
 
 

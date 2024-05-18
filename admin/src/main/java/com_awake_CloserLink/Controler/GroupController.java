@@ -3,6 +3,7 @@ package com_awake_CloserLink.Controler;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
 import com_awake_CloserLink.Dto.Request.ShortLinkSaveGroupReqDTO;
+import com_awake_CloserLink.Dto.Request.ShortLinkSortGroupReqDTO;
 import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
 import com_awake_CloserLink.Dto.Respons.ShortLinkGroupRespDTO;
 import com_awake_CloserLink.Service.GroupService;
@@ -25,7 +26,7 @@ public class GroupController {
      * @param
      * @return
      */
-    @PostMapping("/api/short-link/v1/group")
+    @PostMapping("/api/short-link/admin/v1/group")
     public Result<Void> saveGroup(@RequestBody ShortLinkSaveGroupReqDTO shortLinkSaveGroupReqDTO){
         groupService.saveGroup(shortLinkSaveGroupReqDTO.getGroupName());
         return Results.success();
@@ -35,7 +36,7 @@ public class GroupController {
      * @param
      * @return
      */
-    @GetMapping("/api/short-link/v1/group")
+    @GetMapping("/api/short-link/admin/v1/group")
     public Result<List<ShortLinkGroupRespDTO>> listGroup(){
         List<ShortLinkGroupRespDTO> list=groupService.listGroup();
         return Results.success(list);
@@ -45,7 +46,7 @@ public class GroupController {
      * 修改短链接分组信息
      * @return
      */
-    @PutMapping("/api/short-link/v1/group")
+    @PutMapping("/api/short-link/admin/v1/group")
     public Result<Void> updateGroup(@RequestBody ShortLinkUpdateGroupReqDTO shortLinkUpdateGroupReqDTO){
         groupService.updateGroup(shortLinkUpdateGroupReqDTO);
         return Results.success();
@@ -56,10 +57,17 @@ public class GroupController {
      * @param
      * @return
      */
-    @DeleteMapping("/api/short-link/v1/group")
+    @DeleteMapping("/api/short-link/admin/v1/group")
     public Result<Void> deleteGroup(@RequestParam("gid")String gid){
         groupService.deleteGroup(gid);
         return Results.success();
     }
 
+
+    @PostMapping("/api/short-link/admin/v1/group/sort")
+    public Result<Void>sortGroup(@RequestBody List<ShortLinkSortGroupReqDTO> shortLinkSortGroupReqDTOList){
+        //对集合中的数据进行排序根据sortOrder
+        groupService.sortGroup(shortLinkSortGroupReqDTOList);
+        return Results.success();
+    }
 }

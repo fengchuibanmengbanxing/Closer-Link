@@ -1,6 +1,7 @@
 package com_awake_CloserLink.Service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com_awake_CloserLink.Dto.Request.ShortLinkSortGroupReqDTO;
 import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
 import com_awake_CloserLink.Dto.Respons.ShortLinkGroupRespDTO;
 import com_awake_CloserLink.Entitys.GroupDO;
@@ -33,4 +34,9 @@ public interface GroupService extends IService<GroupDO> {
      * 删除短链接分组信息
      */
     void deleteGroup(String gid);
+    /**
+     * 排序短链接分组信息
+     */
+    void sortGroup(List<ShortLinkSortGroupReqDTO> shortLinkSortGroupReqDTOList);
+
 }
