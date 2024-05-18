@@ -2,11 +2,14 @@ package com_awake_CloserLink.Service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com_awake_CloserLink.Common.Convention.Exception.ServiceException;
 import com_awake_CloserLink.Dto.Req.ShortLinkCreatReqDTO;
+import com_awake_CloserLink.Dto.Req.ShortLinkPageReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
+import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Entitys.LinkDO;
 import com_awake_CloserLink.Mapper.ShortLinkMapper;
 import com_awake_CloserLink.Service.ShortLinkService;
@@ -60,6 +63,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .fullShortUrl(shortLinkDO.getFullShortUrl())
                 .build();
 
+    }
+
+    //获取短链接分页
+
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO shortLinkPageReqDTO) {
+        String gid = shortLinkPageReqDTO.getGid();
+        if (gid != null) {
+            LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
+                    .eq(LinkDO::getGid, gid)
+                    .eq(LinkDO::getDelFlag, 0)
+                    .eq(LinkDO::getEnableStatus, 1);
+            IPage<LinkDO> linkDOIPage = baseMapper.selectPage(shortLinkPageReqDTO, queryWrapper);
+            return linkDOIPage.convert(linkDO -> {
+                ShortLinkPageRespDTO shortLinkPageRespDTO = new ShortLinkPageRespDTO();
+                BeanUtil.copyProperties(linkDO, shortLinkPageRespDTO);
+                return shortLinkPageRespDTO;
+            });
+        }
+        return null;
     }
 
 
