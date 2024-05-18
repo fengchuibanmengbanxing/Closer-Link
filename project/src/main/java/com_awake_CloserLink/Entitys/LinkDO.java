@@ -80,6 +80,9 @@ public class LinkDO extends BaseDO {
      */
     @TableField("`describe`")
     private String describe;
-
+    /**
+     * 图标
+     */
+    private String favicon;
 
 }
