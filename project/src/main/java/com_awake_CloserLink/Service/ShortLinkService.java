@@ -1,8 +1,11 @@
 package com_awake_CloserLink.Service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com_awake_CloserLink.Dto.Req.ShortLinkCreatReqDTO;
+import com_awake_CloserLink.Dto.Req.ShortLinkPageReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
+import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Entitys.LinkDO;
 
 /**
@@ -16,4 +19,10 @@ public interface ShortLinkService extends IService<LinkDO> {
      */
     ShortLinkCreatRespDTO creatShortLink(ShortLinkCreatReqDTO shortLinkCreatReqDTO);
 
+    /**
+     * 获取短链接分页
+     * @param shortLinkPageReqDTO
+     * @return
+     */
+    IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO shortLinkPageReqDTO);
 }
