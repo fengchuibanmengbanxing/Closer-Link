@@ -123,7 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         //将登录用户存放入redis
         String uuid = UUID.randomUUID().toString().replace("-","");
         stringRedisTemplate.opsForHash().put("login:" + userLoginReqDTO.getUsername(), uuid,JSON.toJSONString(userDO));
-        stringRedisTemplate.expire("login:" + userLoginReqDTO.getUsername(), 30, TimeUnit.MINUTES);
+        stringRedisTemplate.expire("login:" + userLoginReqDTO.getUsername(), 1, TimeUnit.DAYS);
         return new UserLoginRespDTO(uuid);
 
     }
