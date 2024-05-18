@@ -70,4 +70,6 @@ public class GroupController {
         groupService.sortGroup(shortLinkSortGroupReqDTOList);
         return Results.success();
     }
+
+
 }
