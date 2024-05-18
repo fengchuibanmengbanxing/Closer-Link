@@ -28,4 +28,5 @@ public class UserConfiguration {
         registration.setOrder(0);
         return registration;
     }
+
 }
