@@ -41,7 +41,7 @@ public class UserTransmitFilter implements Filter {
         String requestURI = httpServletRequest.getRequestURI();
         if (!IGNORE_URI.contains(requestURI)) {
             String method = httpServletRequest.getMethod();
-            if (!("POST".equals(method)) && Objects.equals(requestURI, "/api/short-link/admin/v1/user")) {
+            if (!(("POST".equals(method)) && Objects.equals(requestURI, "/api/short-link/admin/v1/user"))) {
                 String username = httpServletRequest.getHeader("username");
                 String token = httpServletRequest.getHeader("token");
                 if (!StrUtil.isAllNotBlank(username, token)) {
@@ -57,13 +57,13 @@ public class UserTransmitFilter implements Filter {
                     throw new ClientException(IDEMPOTENT_TOKEN_NULL_ERROR);
                 }
 
-
                 UserInfoDTO userInfoDTO =
                         JSON.parseObject(userInfo.toString(), UserInfoDTO.class);
                 UserContext.setUser(userInfoDTO);
-
             }
         }
+
+
 
         try {
             filterChain.doFilter(servletRequest, servletResponse);
