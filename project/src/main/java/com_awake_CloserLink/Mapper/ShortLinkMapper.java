@@ -1,8 +1,11 @@
 package com_awake_CloserLink.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Entitys.LinkDO;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
  * @Author 清醒
@@ -10,6 +13,5 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface ShortLinkMapper extends BaseMapper<LinkDO> {
-
-
+    List<ShortLinkGroupCountQueryRespDTO> getList(List<String> requestParam);
 }
