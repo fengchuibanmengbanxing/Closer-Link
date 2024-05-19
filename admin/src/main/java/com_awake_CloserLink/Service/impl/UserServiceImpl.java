@@ -13,6 +13,7 @@ import com_awake_CloserLink.Dto.Respons.UserLoginRespDTO;
 import com_awake_CloserLink.Dto.Respons.UserRespDTO;
 import com_awake_CloserLink.Entitys.UserDO;
 import com_awake_CloserLink.Mapper.UserMapper;
+import com_awake_CloserLink.Service.GroupService;
 import com_awake_CloserLink.Service.UserService;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
@@ -40,6 +41,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private RedissonClient redissonClient;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private GroupService groupService;
 
     public UserRespDTO getUsernameByUserName(String username) {
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, username);
@@ -88,12 +91,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 }
                 //加入布隆过滤器
                 userRegisterCachePenetrationBloomFilter.add(userRegister.getUsername());
+                groupService.saveGroup(userRegister.getUsername(),"默认分组");
             } else {
                 throw new ClientException(USER_NAME_EXIST_ERROR);
             }
         } finally {
             lock.unlock();
         }
+
 
     }
 
@@ -106,6 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
         return update;
     }
+
     //用户登录
     @Override
     public UserLoginRespDTO login(UserLoginReqDTO userLoginReqDTO) {
@@ -121,15 +127,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
         //避免第三方多次登录使用hash结构
         //将登录用户存放入redis
-        String uuid = UUID.randomUUID().toString().replace("-","");
-        stringRedisTemplate.opsForHash().put("login:" + userLoginReqDTO.getUsername(), uuid,JSON.toJSONString(userDO));
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        stringRedisTemplate.opsForHash().put("login:" + userLoginReqDTO.getUsername(), uuid, JSON.toJSONString(userDO));
         stringRedisTemplate.expire("login:" + userLoginReqDTO.getUsername(), 1, TimeUnit.DAYS);
         return new UserLoginRespDTO(uuid);
 
     }
+
     //检查用户登录状态
     @Override
-    public Boolean checkLogin(String token,String username) {
+    public Boolean checkLogin(String token, String username) {
         Object remoteToken = stringRedisTemplate.opsForHash().get("login:" + username, token);
         if (remoteToken != null) {
             return true;
@@ -142,9 +149,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     public void logout(String token, String username) {
         //检查用户登录状态
-        if(checkLogin(token,username)){
-          stringRedisTemplate.delete("login:" + username);
-        }else {
+        if (checkLogin(token, username)) {
+            stringRedisTemplate.delete("login:" + username);
+        } else {
             throw new ClientException("用户未登录");
         }
 
