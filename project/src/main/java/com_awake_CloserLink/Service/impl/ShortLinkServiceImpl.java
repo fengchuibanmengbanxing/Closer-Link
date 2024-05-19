@@ -2,6 +2,7 @@ package com_awake_CloserLink.Service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -9,6 +10,7 @@ import com_awake_CloserLink.Common.Convention.Exception.ServiceException;
 import com_awake_CloserLink.Dto.Req.ShortLinkCreatReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkPageReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
+import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Entitys.LinkDO;
 import com_awake_CloserLink.Mapper.ShortLinkMapper;
@@ -18,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Author 清醒
@@ -29,6 +34,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     //创建短链接布隆过滤器
     @Autowired
     private RBloomFilter<String> shortLinkCreatCachePenetrationBloomFilter;
+    @Autowired
+    private ShortLinkMapper shortLinkMapper;
 
     //创建短链接
     @Override
@@ -82,6 +89,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             });
         }
         return null;
+    }
+
+    @Override
+    public List<ShortLinkGroupCountQueryRespDTO> countShortLink(List<String> requestParam) {
+        QueryWrapper<LinkDO> queryWrapper = Wrappers.query(new LinkDO())
+                .select("gid,count(*) as shortLinkCount")//不取别名属性无法对应
+                .in("gid", requestParam)
+                .eq("enable_status",1)
+                .groupBy("gid");
+        List<Map<String,Object>> list = baseMapper.selectMaps(queryWrapper);
+        return BeanUtil.copyToList(list, ShortLinkGroupCountQueryRespDTO.class);
     }
 
 
