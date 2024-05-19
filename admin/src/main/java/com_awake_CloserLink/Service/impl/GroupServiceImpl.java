@@ -6,16 +6,21 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com_awake_CloserLink.Common.Biz.UserContext;
+import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Dto.Request.ShortLinkSortGroupReqDTO;
 import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
 import com_awake_CloserLink.Dto.Respons.ShortLinkGroupRespDTO;
 import com_awake_CloserLink.Entitys.GroupDO;
 import com_awake_CloserLink.Mapper.GroupMapper;
+import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
+import com_awake_CloserLink.Remote.ShortLinkRemoteService;
 import com_awake_CloserLink.Service.GroupService;
 import com_awake_CloserLink.Utils.RandomUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @Author 清醒
@@ -24,26 +29,36 @@ import java.util.List;
 @Service
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
+    };
+
     /**
      * 保存短链接组
      *
      * @param groupName
      */
+    //登陆后创建分组
     @Override
     public void saveGroup(String groupName) {
+        saveGroup(UserContext.getUsername(), groupName);
+    }
+
+    //注册后默认创建分组
+    @Override
+    public void saveGroup(String username,String groupName) {
         /**
          * 生成随机六位数据组id
          */
         String gid = RandomUtil.generateRandomCode();
         while (true) {
-            if (!hasGid(gid)) {
+            if (!hasGid(username,gid)) {
                 break;
             }
         }
         GroupDO groupDO = GroupDO.builder()
                 .gid(gid)
                 .name(groupName)
-                .username(UserContext.getUsername())
+                .username(username)
                 .sortOrder(0)
                 .build();
         baseMapper.insert(groupDO);
@@ -52,12 +67,28 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     //根据用户名获取短链接集合
     @Override
     public List<ShortLinkGroupRespDTO> listGroup() {
+        //查询当前用户的所有分组
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, 0)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
         List<GroupDO> groupDOS = baseMapper.selectList(queryWrapper);
-        return BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
+        // 遍历集合，将集合中的数据转换为响应对象
+        //获取所有分组标识gid
+        List<String> strings = groupDOS.stream().map(GroupDO::getGid).toList();
+        //远程调用查询所有gid分组集合短链接数量
+        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkRemoteService.countShortLink(strings);
+        List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
+        //遍历所有分组
+        shortLinkGroupRespDTOList.forEach(each -> {
+            //过滤出远程调用的存在的分组标识gid
+            Optional<ShortLinkGroupCountQueryRespDTO> first
+                    = listResult.getData().stream().filter(item -> Objects.equals(item.getGid(), each.getGid()))
+                    .findFirst();
+           //设置每个分组短链接数量
+            first.ifPresent(item -> each.setShortLinkCount(first.get().getShortLinkCount()));
+        });
+        return shortLinkGroupRespDTOList;
     }
 
 
@@ -103,11 +134,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
 
     //判断是否生成的gid是否重复
-    private boolean hasGid(String gid) {
+    private boolean hasGid(String username,String gid) {
         //TODO 获取用户名
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getName, UserContext.getUsername());
+                .eq(GroupDO::getName, Optional.ofNullable(username).orElse(UserContext.getUsername()));
         return baseMapper.selectOne(queryWrapper) != null;
     }
 
