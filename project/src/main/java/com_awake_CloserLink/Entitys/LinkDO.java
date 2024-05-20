@@ -3,6 +3,7 @@ package com_awake_CloserLink.Entitys;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com_awake_CloserLink.Common.Database.BaseDO;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.Date;
  * 短链接实体
  */
 @Data
+@Builder
 @TableName("t_link")
 public class LinkDO extends BaseDO {
 
