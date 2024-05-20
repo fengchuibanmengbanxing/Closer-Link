@@ -53,7 +53,7 @@ public interface ShortLinkRemoteService {
 
 
     default void updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO) {
-        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(shortLinkUpdateReqDTO));
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update",JSON.toJSONString(shortLinkUpdateReqDTO));
     }
 
 

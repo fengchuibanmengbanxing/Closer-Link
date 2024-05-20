@@ -35,7 +35,7 @@ public class ShortLinkRemoteController {
     }
 
 
-    @GetMapping("/api/short-link/v1/count")
+    @GetMapping("/api/short-link/admin/v1/count")
     public Result<List<ShortLinkGroupCountQueryRespDTO>> countShortLink(@RequestParam("requestParam") List<String> requestParam ){
         return shortLinkRemoteService.countShortLink(requestParam);
     }
@@ -45,7 +45,7 @@ public class ShortLinkRemoteController {
      * @param shortLinkUpdateReqDTO
      * @return
      */
-    @PostMapping("/api/short-link/v1/update")
+    @PostMapping("/api/short-link/admin/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO){
         shortLinkRemoteService.updateShortLink(shortLinkUpdateReqDTO);
         return Results.success();
