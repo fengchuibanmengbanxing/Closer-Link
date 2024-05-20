@@ -10,9 +10,12 @@ import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Service.ShortLinkService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -62,6 +65,12 @@ public class ShortLinkController {
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO){
         shortLinkService.updateShortLink(shortLinkUpdateReqDTO);
         return Results.success();
+    }
+
+
+    @GetMapping("/{short-link}")
+    public void restoreUrl(@PathVariable ("short-link") String shortLink, ServletResponse response, ServletRequest request) throws IOException {
+        shortLinkService.restoreUrl(shortLink,request,response);
     }
 
 }

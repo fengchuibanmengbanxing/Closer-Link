@@ -9,7 +9,10 @@ import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Entitys.LinkDO;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -42,4 +45,12 @@ public interface ShortLinkService extends IService<LinkDO> {
      * @return
      */
     void updateShortLink(ShortLinkUpdateReqDTO shortLinkUpdateReqDTO);
+
+    /**
+     * 短链接跳转真实网址
+     * @param shortLink 短网址
+     * @param request   http请求
+     * @param response  http响应
+     */
+    void restoreUrl(String shortLink, ServletRequest request, ServletResponse response) throws IOException;
 }

@@ -1,6 +1,7 @@
 package com_awake_CloserLink.Service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -17,18 +18,31 @@ import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Entitys.LinkDO;
+import com_awake_CloserLink.Entitys.LinkGotoDO;
+import com_awake_CloserLink.Mapper.ShortLinkGotoMapper;
 import com_awake_CloserLink.Mapper.ShortLinkMapper;
 import com_awake_CloserLink.Service.ShortLinkService;
 import com_awake_CloserLink.Utils.HashUtil;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import static com_awake_CloserLink.Common.Constant.RedisKeyConstant.GOTO_SHORT_LINK_KEY;
+import static com_awake_CloserLink.Common.Constant.RedisKeyConstant.LOCK_GOTO_SHORT_LINK_KEY;
 
 /**
  * @Author 清醒
@@ -42,6 +56,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private RBloomFilter<String> shortLinkCreatCachePenetrationBloomFilter;
     @Autowired
     private ShortLinkMapper shortLinkMapper;
+    @Autowired
+    private ShortLinkGotoMapper shortLinkGotoMapper;
+    @Autowired
+    private RedissonClient redissonClient;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     //创建短链接
     @Override
@@ -54,9 +74,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         shortLinkDO.setFullShortUrl(fullShortUrl);
         shortLinkDO.setEnableStatus(1);
         shortLinkDO.setShortUri(generateSuffix);
+
+        //
+        LinkGotoDO linkGotoDO = LinkGotoDO.builder()
+//                .id(shortLinkDO.getId())
+                .gid(shortLinkDO.getGid())
+                .fullShortUrl(fullShortUrl)
+                .build();
+
         //防止数据库写入后但是布隆过滤器未添加短链接导致下次请求短链接缓存穿透
         try {
             baseMapper.insert(shortLinkDO);
+            shortLinkGotoMapper.insert(linkGotoDO);
         } catch (Exception e) {
             LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
                     .eq(LinkDO::getFullShortUrl, fullShortUrl);
@@ -73,7 +102,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         return ShortLinkCreatRespDTO.builder()
                 .gid(shortLinkCreatReqDTO.getGid())
                 .originUrl(shortLinkCreatReqDTO.getOriginUrl())
-                .fullShortUrl(shortLinkDO.getFullShortUrl())
+                .fullShortUrl(shortLinkCreatReqDTO.getDomainProtocol() + shortLinkDO.getFullShortUrl())
                 .build();
 
     }
@@ -96,9 +125,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         }
         return null;
     }
+
     @Override
     public List<ShortLinkGroupCountQueryRespDTO> countShortLink(List<String> requestParam) {
-        QueryWrapper<LinkDO> queryWrapper = Wrappers.query( new LinkDO())
+        QueryWrapper<LinkDO> queryWrapper = Wrappers.query(new LinkDO())
                 .select("gid,count(*) as shortLinkCount")//不取别名属性无法对应
                 .in("gid", requestParam)
                 .eq("enable_status", 1)
@@ -131,15 +161,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .validDateType(shortLinkUpdateReqDTO.getValidDateType())
                 .build();
         //判断数据库中与新数据gid是否一致
-        if(Objects.equals(hasLinkDO.getGid(),shortLinkUpdateReqDTO.getGid())){
+        if (Objects.equals(hasLinkDO.getGid(), shortLinkUpdateReqDTO.getGid())) {
             LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
                     .eq(LinkDO::getGid, hasLinkDO.getGid())
-                    .eq(LinkDO::getOriginUrl, shortLinkUpdateReqDTO.getOriginUrl())
+                    .eq(LinkDO::getFullShortUrl, shortLinkUpdateReqDTO.getFullShortUrl())
                     .eq(LinkDO::getDelFlag, 0)
                     .eq(LinkDO::getEnableStatus, 1)
                     .set(Objects.equals(shortLinkUpdateReqDTO.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()), LinkDO::getValidDate, null);
             baseMapper.update(linkdo, updateWrapper);
-        }else {
+        } else {
             LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
                     .eq(LinkDO::getGid, shortLinkUpdateReqDTO.getGid())
                     .eq(LinkDO::getOriginUrl, shortLinkUpdateReqDTO.getOriginUrl())
@@ -151,8 +181,61 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             linkdo.setGid(shortLinkUpdateReqDTO.getGid());
             baseMapper.insert(linkdo);
         }
+    }
 
-
+    /**
+     * 短链接跳转真实网址
+     *
+     * @param shortLink 短网址
+     * @param request   http请求
+     * @param response  http响应
+     */
+    @Override
+    public void restoreUrl(String shortLink, ServletRequest request, ServletResponse response) throws IOException {
+        //获取主机名
+        String serverName = request.getServerName();
+        //完整短链接
+        String fullShortLink = serverName + "/" + shortLink;
+        String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortLink));
+        if (StrUtil.isNotBlank(originalLink)) {
+            ((HttpServletResponse) response).sendRedirect(originalLink);
+            return;
+        }
+        if (StrUtil.isBlank(originalLink)) {
+            RLock lock = redissonClient.getLock(String.format(LOCK_GOTO_SHORT_LINK_KEY, fullShortLink));
+            lock.lock();
+            try {
+                //双重判定锁
+                originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortLink));
+                if (StrUtil.isNotBlank(originalLink)) {
+                    ((HttpServletResponse) response).sendRedirect(originalLink);
+                    return;
+                }
+                //优先查询goto表
+                LinkGotoDO linkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.lambdaQuery(LinkGotoDO.class)
+                        .eq(LinkGotoDO::getFullShortUrl, fullShortLink));
+                if (linkGotoDO == null) {
+                    //封控
+                }
+                LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
+                        .eq(LinkDO::getFullShortUrl, linkGotoDO.getFullShortUrl())
+                        .eq(LinkDO::getDelFlag, 0)
+                        .eq(LinkDO::getEnableStatus, 1)
+                        .eq(LinkDO::getGid, linkGotoDO.getGid());
+                LinkDO linkDO = baseMapper.selectOne(queryWrapper);
+                //网址跳转
+                if (linkDO != null) {
+                    stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortLink), linkDO.getOriginUrl(), 1, TimeUnit.DAYS);
+                    ((HttpServletResponse) response).sendRedirect(linkDO.getOriginUrl());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                lock.unlock();
+            }
+            //布隆过滤器中不存在则执行
+            //if (!shortLinkCreatCachePenetrationBloomFilter.contains(shortLink)) {
+        }
     }
 
 
