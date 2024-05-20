@@ -5,6 +5,7 @@ import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
 import com_awake_CloserLink.Dto.Req.ShortLinkCreatReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkPageReqDTO;
+import com_awake_CloserLink.Dto.Req.ShortLinkUpdateReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
@@ -50,6 +51,17 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/v1/count")
     public Result<List<ShortLinkGroupCountQueryRespDTO>> countShortLink(@RequestParam("requestParam") List<String> RequestParam ){
         return Results.success(shortLinkService.countShortLink(RequestParam));
+    }
+
+    /**
+     * 修改短链接信息
+     * @param shortLinkUpdateReqDTO
+     * @return
+     */
+    @PostMapping("/api/short-link/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO){
+        shortLinkService.updateShortLink(shortLinkUpdateReqDTO);
+        return Results.success();
     }
 
 }

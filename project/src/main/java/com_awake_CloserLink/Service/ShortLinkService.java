@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com_awake_CloserLink.Dto.Req.ShortLinkCreatReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkPageReqDTO;
+import com_awake_CloserLink.Dto.Req.ShortLinkUpdateReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
@@ -35,4 +36,10 @@ public interface ShortLinkService extends IService<LinkDO> {
      */
     List<ShortLinkGroupCountQueryRespDTO>countShortLink(List<String> requestParam);
 
+    /**
+     * 修改短链接信息
+     * @param shortLinkUpdateReqDTO
+     * @return
+     */
+    void updateShortLink(ShortLinkUpdateReqDTO shortLinkUpdateReqDTO);
 }
