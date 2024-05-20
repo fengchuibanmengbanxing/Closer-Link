@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Remote.Req.ShortLinkCreatReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkPageReqDTO;
+import com_awake_CloserLink.Remote.Req.ShortLinkUpdateReqDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkPageRespDTO;
@@ -25,7 +26,7 @@ public interface ShortLinkRemoteService {
 
     default Result<ShortLinkCreatRespDTO> creatShortLink(@RequestBody ShortLinkCreatReqDTO shortLinkCreatReqDTO) {
 
-        String s = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/creat" ,JSON.toJSONString(shortLinkCreatReqDTO));
+        String s = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/creat", JSON.toJSONString(shortLinkCreatReqDTO));
         return JSON.parseObject(s, new TypeReference<Result<ShortLinkCreatRespDTO>>() {
         });
     }
@@ -42,11 +43,18 @@ public interface ShortLinkRemoteService {
         });
     }
 
-    default Result<List<ShortLinkGroupCountQueryRespDTO>> countShortLink(@RequestParam("requestParam") List<String> requestParam ){
+    default Result<List<ShortLinkGroupCountQueryRespDTO>> countShortLink(@RequestParam("requestParam") List<String> requestParam) {
         HashMap<String, Object> resultMap = new HashMap<>();
-        resultMap.put("requestParam",requestParam);
+        resultMap.put("requestParam", requestParam);
         String s = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count", resultMap);
         return JSON.parseObject(s, new TypeReference<Result<List<ShortLinkGroupCountQueryRespDTO>>>() {
         });
     }
+
+
+    default void updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO) {
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(shortLinkUpdateReqDTO));
+    }
+
+
 }
