@@ -67,7 +67,13 @@ public class ShortLinkController {
         return Results.success();
     }
 
-
+    /**
+     * 短链接跳转
+     * @param shortLink 短链接
+     * @param response  响应
+     * @param request   请求
+     * @throws IOException
+     */
     @GetMapping("/{short-link}")
     public void restoreUrl(@PathVariable ("short-link") String shortLink, ServletResponse response, ServletRequest request) throws IOException {
         shortLinkService.restoreUrl(shortLink,request,response);
