@@ -14,4 +14,8 @@ public class RedisKeyConstant {
      * 短链接reidskey
      */
     public static final String LOCK_GOTO_SHORT_LINK_KEY = "lock_goto_short_link_%s";
+    /**
+     * 短链接reidskey
+     */
+    public static final String GOTO_IS_NOTNULL_SHORT_LINK_KEY = "goto_is_notnull_short_link_key_%s";
 }
