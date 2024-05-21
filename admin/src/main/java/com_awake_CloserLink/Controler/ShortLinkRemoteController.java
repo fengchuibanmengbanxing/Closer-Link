@@ -51,4 +51,13 @@ public class ShortLinkRemoteController {
         return Results.success();
     }
 
+    /**
+     *   获取网站标题
+     */
+    @GetMapping("/api/short-link/admin/v1/title")
+    public Result<String> getUrlTitle(@RequestParam("url") String url){
+        return shortLinkRemoteService.getUrlTitle(url);
+    }
+
+
 }

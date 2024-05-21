@@ -56,5 +56,11 @@ public interface ShortLinkRemoteService {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update",JSON.toJSONString(shortLinkUpdateReqDTO));
     }
 
+    default Result<String> getUrlTitle(@RequestParam("url") String url){
+        String  TitleString= HttpUtil.get("http://127.0.0.1:8001/api/short-link/title?url=" + url);
+     return JSON.parseObject(TitleString, new TypeReference<Result<String>>() {
+        });
+    }
+
 
 }
