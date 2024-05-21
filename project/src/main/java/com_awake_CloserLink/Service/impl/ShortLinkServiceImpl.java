@@ -24,6 +24,7 @@ import com_awake_CloserLink.Mapper.ShortLinkMapper;
 import com_awake_CloserLink.Service.ShortLinkService;
 import com_awake_CloserLink.Utils.HashUtil;
 import com_awake_CloserLink.Utils.LinkUtil;
+import com_awake_CloserLink.Utils.SslUtils;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static com_awake_CloserLink.Common.Constant.RedisKeyConstant.*;
 
@@ -74,8 +76,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         shortLinkDO.setFullShortUrl(fullShortUrl);
         shortLinkDO.setEnableStatus(1);
         shortLinkDO.setShortUri(generateSuffix);
+        //获取网站图标
+        shortLinkDO.setFavicon(SslUtils.getFaviconUrl(shortLinkCreatReqDTO.getOriginUrl()));
 
-        //
+
         LinkGotoDO linkGotoDO = LinkGotoDO.builder()
 //                .id(shortLinkDO.getId())
                 .gid(shortLinkDO.getGid())
@@ -96,7 +100,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             }
         }
         //缓存预热  创建短链接后就将其放入redis中
-        stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), shortLinkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()));
+        stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), shortLinkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
         shortLinkCreatCachePenetrationBloomFilter.add(fullShortUrl);
 
         //返回响应类RespDTO
@@ -108,6 +112,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .build();
 
     }
+
 
     //获取短链接分页
 
@@ -245,9 +250,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .eq(LinkDO::getGid, linkGotoDO.getGid());
                 LinkDO linkDO = baseMapper.selectOne(queryWrapper);
                 //网址跳转
-                if (linkDO != null) {
+
                     //短链接过期 创建短链接空对象
-                    if (linkDO.getValidDate() != null && linkDO.getValidDate().getTime() < System.currentTimeMillis()) {
+                    if (linkDO == null || linkDO.getValidDate().getTime() < System.currentTimeMillis()) {
                         stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NOTNULL_SHORT_LINK_KEY, fullShortLink), "-");
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
@@ -256,7 +261,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                     stringRedisTemplate.opsForValue()
                             .set(String.format(GOTO_SHORT_LINK_KEY, fullShortLink), linkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()));
                     ((HttpServletResponse) response).sendRedirect(linkDO.getOriginUrl());
-                }
+
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
