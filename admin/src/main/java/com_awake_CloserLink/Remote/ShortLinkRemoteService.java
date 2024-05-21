@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
+import com_awake_CloserLink.Remote.Req.RecycleBinSaveReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkCreatReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkPageReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkUpdateReqDTO;
@@ -53,14 +54,28 @@ public interface ShortLinkRemoteService {
 
 
     default void updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO) {
-        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update",JSON.toJSONString(shortLinkUpdateReqDTO));
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(shortLinkUpdateReqDTO));
     }
 
-    default Result<String> getUrlTitle(@RequestParam("url") String url){
-        String  TitleString= HttpUtil.get("http://127.0.0.1:8001/api/short-link/title?url=" + url);
-     return JSON.parseObject(TitleString, new TypeReference<Result<String>>() {
+    default Result<String> getUrlTitle(@RequestParam("url") String url) {
+        String TitleString = HttpUtil.get("http://127.0.0.1:8001/api/short-link/title?url=" + url);
+        return JSON.parseObject(TitleString, new TypeReference<Result<String>>() {
         });
     }
 
+    default void saveRecycleBin(RecycleBinSaveReqDTO recycleBinSaveReqDTO) {
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/save", JSON.toJSONString(recycleBinSaveReqDTO));
 
+    }
+
+    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBin(ShortLinkPageReqDTO shortLinkPageReqDTO) {
+        HashMap<String, Object> resultMap = new HashMap<>();
+        resultMap.put("gid", shortLinkPageReqDTO.getGid());
+        resultMap.put("page", shortLinkPageReqDTO.getCurrent());
+        resultMap.put("size", shortLinkPageReqDTO.getSize());
+        String s = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", resultMap);
+
+        return JSON.parseObject(s, new TypeReference<Result<IPage<ShortLinkPageRespDTO>>>() {
+        });
+    }
 }

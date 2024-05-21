@@ -3,6 +3,7 @@ package com_awake_CloserLink.Controler;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
+import com_awake_CloserLink.Remote.Req.RecycleBinSaveReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkCreatReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkPageReqDTO;
 import com_awake_CloserLink.Remote.Req.ShortLinkUpdateReqDTO;
@@ -59,5 +60,14 @@ public class ShortLinkRemoteController {
         return shortLinkRemoteService.getUrlTitle(url);
     }
 
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
+    public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO recycleBinSaveReqDTO) {
+        shortLinkRemoteService.saveRecycleBin(recycleBinSaveReqDTO);
+        return Results.success();
+    }
 
+    @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
+    public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBin(ShortLinkPageReqDTO shortLinkPageReqDTO){
+        return shortLinkRemoteService.pageRecycleBin(shortLinkPageReqDTO);
+    }
 }
