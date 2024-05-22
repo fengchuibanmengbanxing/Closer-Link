@@ -20,3 +20,6 @@ public interface LinkAccessStatsMapper {
             "ON DUPLICATE KEY UPDATE pv = pv +  #{linkAccessStats.pv}, uv = uv + #{linkAccessStats.uv}, uip = uip + #{linkAccessStats.uip};")
     void shortLinkStats(@Param("linkAccessStats") LinkAccessStatsDO linkAccessStatsDO);
 }
+
+
+
