@@ -239,6 +239,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 LinkGotoDO linkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.lambdaQuery(LinkGotoDO.class)
                         .eq(LinkGotoDO::getFullShortUrl, fullShortLink));
                 if (linkGotoDO == null) {
+                    //短链接不存在设置空对象
                     stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NOTNULL_SHORT_LINK_KEY, fullShortLink), "-");
                     ((HttpServletResponse) response).sendRedirect("/page/notfound");
                     //封控
@@ -251,15 +252,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 LinkDO linkDO = baseMapper.selectOne(queryWrapper);
                 //网址跳转
 
-                    //短链接过期 创建短链接空对象
-                    if (linkDO == null || linkDO.getValidDate().getTime() < System.currentTimeMillis()) {
+                    //短链接过期 创建短链接空对象   防止永久短链接有效期设置为空导致错误
+                    if (linkDO == null ||(linkDO.getValidDate()!=null&&linkDO.getValidDate().getTime() < System.currentTimeMillis())) {
                         stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NOTNULL_SHORT_LINK_KEY, fullShortLink), "-");
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
                     }
                     //过期后再设置默认时间()
                     stringRedisTemplate.opsForValue()
-                            .set(String.format(GOTO_SHORT_LINK_KEY, fullShortLink), linkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()));
+                            .set(String.format(GOTO_SHORT_LINK_KEY, fullShortLink), linkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()), TimeUnit.MILLISECONDS);
                     ((HttpServletResponse) response).sendRedirect(linkDO.getOriginUrl());
 
             } catch (IOException e) {
