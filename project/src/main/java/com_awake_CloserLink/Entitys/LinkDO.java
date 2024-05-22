@@ -82,6 +82,11 @@ public class LinkDO extends BaseDO {
     private Date validDate;
 
     /**
+     * 删除
+     */
+    private Integer delFlag;
+
+    /**
      * 描述
      */
     @TableField("`describe`")
