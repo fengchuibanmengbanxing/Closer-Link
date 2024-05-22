@@ -3,10 +3,7 @@ package com_awake_CloserLink.Controler;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
-import com_awake_CloserLink.Remote.Req.RecycleBinSaveReqDTO;
-import com_awake_CloserLink.Remote.Req.ShortLinkCreatReqDTO;
-import com_awake_CloserLink.Remote.Req.ShortLinkPageReqDTO;
-import com_awake_CloserLink.Remote.Req.ShortLinkUpdateReqDTO;
+import com_awake_CloserLink.Remote.Req.*;
 import com_awake_CloserLink.Remote.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkPageRespDTO;
@@ -70,4 +67,23 @@ public class ShortLinkRemoteController {
     public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBin(ShortLinkPageReqDTO shortLinkPageReqDTO){
         return shortLinkRemoteService.pageRecycleBin(shortLinkPageReqDTO);
     }
+
+    /**
+     *恢复回收站
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/recover")
+    public Result<Void>recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO recycleBinRecoverReqDTO) {
+        shortLinkRemoteService.recoverRecycleBin(recycleBinRecoverReqDTO);
+        return Results.success();
+    }
+
+    /**
+     *从回收站删除
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/remove")
+    public Result<Void>removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO recycleBinRemoveReqDTO) {
+        shortLinkRemoteService.removeRecycleBin(recycleBinRemoveReqDTO);
+        return Results.success();
+    }
+
 }
