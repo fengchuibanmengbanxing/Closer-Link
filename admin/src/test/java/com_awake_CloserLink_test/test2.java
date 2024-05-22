@@ -1,5 +1,9 @@
 package com_awake_CloserLink_test;
 
+import cn.hutool.core.date.DateUtil;
+import org.junit.Test;
+
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -17,6 +21,18 @@ public class test2 {
         }
         return code.toString();
     }
+
+    @Test
+    public void test() {
+        Date date = new Date();
+        int hour = DateUtil.hour(date, true);
+        int i = DateUtil.dayOfWeek(date);
+        int week = DateUtil.weekOfMonth(date);
+        System.out.println(week);
+    }
+
+
+
 }
 
 
