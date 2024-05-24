@@ -2,7 +2,12 @@ package com_awake_CloserLink.Service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -21,7 +26,9 @@ import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
 import com_awake_CloserLink.Entitys.LinkAccessStatsDO;
 import com_awake_CloserLink.Entitys.LinkDO;
 import com_awake_CloserLink.Entitys.LinkGotoDO;
+import com_awake_CloserLink.Entitys.LinkLocaleStatsDO;
 import com_awake_CloserLink.Mapper.LinkAccessStatsMapper;
+import com_awake_CloserLink.Mapper.LinkLocaleStatsMapper;
 import com_awake_CloserLink.Mapper.ShortLinkGotoMapper;
 import com_awake_CloserLink.Mapper.ShortLinkMapper;
 import com_awake_CloserLink.Service.ShortLinkService;
@@ -30,22 +37,23 @@ import com_awake_CloserLink.Utils.LinkUtil;
 import com_awake_CloserLink.Utils.SslUtils;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com_awake_CloserLink.Common.Constant.RedisKeyConstant.*;
 
@@ -70,8 +78,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private LinkAccessStatsMapper linkAccessStatsMapper;
-
-
+    @Autowired
+    private LinkLocaleStatsMapper linkLocaleStatsMapper;
+    @Value("${shortLink.amap.key}")
+    private String amapKey;
     //创建短链接
     @Override
     public ShortLinkCreatRespDTO creatShortLink(ShortLinkCreatReqDTO shortLinkCreatReqDTO) {
@@ -80,7 +90,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         LinkDO shortLinkDO = BeanUtil.toBean(shortLinkCreatReqDTO, LinkDO.class);
         String fullShortUrl = shortLinkDO.getDomain() + "/" + generateSuffix;
         //设置完整短链接
-        shortLinkDO.setFullShortUrl(fullShortUrl);
+        shortLinkDO.setFullShortUrl("http://"+fullShortUrl);
         shortLinkDO.setEnableStatus(1);
         shortLinkDO.setShortUri(generateSuffix);
         //获取网站图标
@@ -271,7 +281,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 stringRedisTemplate.opsForValue()
                         .set(String.format(GOTO_SHORT_LINK_KEY, fullShortLink), linkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()), TimeUnit.MILLISECONDS);
                 shortLinkStats(fullShortLink, linkDO.getGid(), request, response);
-                        ((HttpServletResponse) response).sendRedirect(linkDO.getOriginUrl());
+                ((HttpServletResponse) response).sendRedirect(linkDO.getOriginUrl());
 
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -282,29 +292,94 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         }
     }
 
-//统计
+    //统计
     public void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
-        if(StrUtil.isBlank(gid)){
-            LambdaQueryWrapper<LinkGotoDO> queryWrapper = Wrappers.lambdaQuery(LinkGotoDO.class)
-                    .eq(LinkGotoDO::getFullShortUrl, fullShortUrl);
-            LinkGotoDO linkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
-            gid = linkGotoDO.getGid();
+        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+        AtomicBoolean uvIsFlag = new AtomicBoolean();
+        try {
+            Runnable runnable = () -> {
+                //快速生成uuid
+                String uv = UUID.fastUUID().toString();
+                Cookie uvCookie = new Cookie("uv", uv);
+                //设置cookie有效期30天
+                uvCookie.setMaxAge(60 * 60 * 24 * 30);
+                uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.indexOf("/"), fullShortUrl.length()));
+                ((HttpServletResponse) response).addCookie(uvCookie);
+                stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl, uv);
+                //是否为新用户
+                uvIsFlag.set(true);
+            };
+
+            if (ArrayUtil.isNotEmpty(cookies)) {
+                Arrays.stream(cookies).filter(cookie -> cookie.getName().equals("uv"))
+                        .findFirst()
+                        .map(cookie -> cookie.getValue())
+                        .ifPresentOrElse(each -> {
+                            Long add = stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl, each);
+                            uvIsFlag.set((add!=null&&add>0));
+                        }, runnable);
+            }else {
+                runnable.run();
+            }
+            //统计ip地址
+            AtomicBoolean ipIsFlag = new AtomicBoolean();
+            String ipaddr = LinkUtil.getIp((HttpServletRequest) request);
+            Long addIp = stringRedisTemplate.opsForSet().add("short-link:stats:ip" + fullShortUrl, ipaddr);
+            ipIsFlag.set((addIp!=null&&addIp>0));
+
+            if (StrUtil.isBlank(gid)) {
+                LambdaQueryWrapper<LinkGotoDO> queryWrapper = Wrappers.lambdaQuery(LinkGotoDO.class)
+                        .eq(LinkGotoDO::getFullShortUrl, fullShortUrl);
+                LinkGotoDO linkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
+                gid = linkGotoDO.getGid();
+            }
+            Date date = new Date();
+            int hour = DateUtil.hour(date, true);
+            int week = DateUtil.dayOfWeek(date);
+            LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
+                    .hour(hour)
+                    .fullShortUrl(fullShortUrl)
+                    .uv(uvIsFlag.get() ? 1 :0)
+                    .pv(1)
+                    .uip(ipIsFlag.get() ? 1 :0)
+                    .gid(gid)
+                    .weekday(week)
+                    .date(date)
+                    .build();
+            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+
+            //统计中国地图地址
+            HashMap<String, Object> localeStatsMap = new HashMap<>();
+            localeStatsMap.put("ip",ipaddr);
+            localeStatsMap.put("key",amapKey);
+            String localeStatsAmap= HttpUtil.get(AMAP_REMOTE_KEY, localeStatsMap);
+            //ip地址获取
+            JSONObject  localeStatsJsonObject = JSON.parseObject(localeStatsAmap);
+            String infoCode = localeStatsJsonObject.getString("infocode");
+            String city = localeStatsJsonObject.getString("city");
+            String adCode = localeStatsJsonObject.getString("adcode");
+            String province = localeStatsJsonObject.getString("province");
+            //是否有省份信息
+            boolean unKnownFlag= StrUtil.isBlank(province);
+            if(StrUtil.isNotBlank(infoCode)&&infoCode.equals("10000")) {
+                LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(date)
+                        .adcode(unKnownFlag? adCode :"未知")
+                        .city(unKnownFlag? city :"未知")
+                        .province(unKnownFlag? province :"未知")
+                        .country("中国")
+                        .cnt(1)
+                        .build();
+                linkLocaleStatsMapper.shortLinkStatsIp(linkLocaleStatsDO);
+            }
+
+        } catch (Exception e) {
+            throw new ClientException("统计异常！");
         }
-        Date date = new Date();
-        int hour = DateUtil.hour(date, true);
-        int week = DateUtil.dayOfWeek(date);
-        LinkAccessStatsDO build = LinkAccessStatsDO.builder()
-                .hour(hour)
-                .fullShortUrl(fullShortUrl)
-                .uv(1)
-                .pv(1)
-                .uip(1)
-                .gid(gid)
-                .weekday(week)
-                .date(date)
-                .build();
-        linkAccessStatsMapper.shortLinkStats(build);
     }
+
 
     //工具类实现短链接
     private String generateSuffix(ShortLinkCreatReqDTO shortLinkCreatReqDTO) {
