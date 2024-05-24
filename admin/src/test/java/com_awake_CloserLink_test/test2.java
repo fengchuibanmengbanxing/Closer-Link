@@ -1,9 +1,14 @@
 package com_awake_CloserLink_test;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.UUID;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -31,7 +36,26 @@ public class test2 {
         System.out.println(week);
     }
 
+    @Test
+    public void test1() {
 
+            String uv = UUID.fastUUID().toString();
+            System.out.println(uv);
+
+    }
+
+
+    @Test
+    public void test2() {
+        HashMap<String, Object> localeStatsMap = new HashMap<>();
+        localeStatsMap.put("ip","114.247.50.2");
+        localeStatsMap.put("key","460c0075ca51d0ba13afb4e6deb14d32");
+        String localeStatsAmap= HttpUtil.get("https://restapi.amap.com/v3/ip", localeStatsMap);
+        JSONObject jsonObject = JSON.parseObject(localeStatsAmap);
+        String infocode = jsonObject.getString("infocode");
+        System.out.println(infocode);
+
+    }
 
 }
 
