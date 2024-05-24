@@ -62,4 +62,13 @@ public class LinkAccessStatsDO{
      * 星期
      */
     private Integer weekday;
+
+    /**
+     * 访问量
+     */
+    private Integer cnt;
+
+
+
+
 }
