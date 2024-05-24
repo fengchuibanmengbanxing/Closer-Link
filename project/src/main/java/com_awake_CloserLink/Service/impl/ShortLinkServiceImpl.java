@@ -23,14 +23,8 @@ import com_awake_CloserLink.Dto.Req.ShortLinkUpdateReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkPageRespDTO;
-import com_awake_CloserLink.Entitys.LinkAccessStatsDO;
-import com_awake_CloserLink.Entitys.LinkDO;
-import com_awake_CloserLink.Entitys.LinkGotoDO;
-import com_awake_CloserLink.Entitys.LinkLocaleStatsDO;
-import com_awake_CloserLink.Mapper.LinkAccessStatsMapper;
-import com_awake_CloserLink.Mapper.LinkLocaleStatsMapper;
-import com_awake_CloserLink.Mapper.ShortLinkGotoMapper;
-import com_awake_CloserLink.Mapper.ShortLinkMapper;
+import com_awake_CloserLink.Entitys.*;
+import com_awake_CloserLink.Mapper.*;
 import com_awake_CloserLink.Service.ShortLinkService;
 import com_awake_CloserLink.Utils.HashUtil;
 import com_awake_CloserLink.Utils.LinkUtil;
@@ -80,6 +74,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private LinkAccessStatsMapper linkAccessStatsMapper;
     @Autowired
     private LinkLocaleStatsMapper linkLocaleStatsMapper;
+    @Autowired
+    private LinkBrowserStatsMapper linkBrowserStatsMapper;
+    @Autowired
+    private LinkOSStatsMapper linkOSStatsMapper;
+
+
     @Value("${shortLink.amap.key}")
     private String amapKey;
     //创建短链接
@@ -373,7 +373,30 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .cnt(1)
                         .build();
                 linkLocaleStatsMapper.shortLinkStatsIp(linkLocaleStatsDO);
+
+                //统计操作系统
+                String os = LinkUtil.getOS((HttpServletRequest) request);
+                LinkOSStatsDO linkOSStatsDO = LinkOSStatsDO.builder()
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .cnt(1)
+                        .date(date)
+                        .os(os)
+                        .build();
+                linkOSStatsMapper.shortLinkStatsOS(linkOSStatsDO);
+
+                //统计浏览器来源
+                String browser = LinkUtil.getBrowser((HttpServletRequest) request);
+                LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .cnt(1)
+                        .date(date)
+                        .browser(browser)
+                        .build();
+                linkBrowserStatsMapper.shortLinkStatsBrowser(linkBrowserStatsDO);
             }
+
 
         } catch (Exception e) {
             throw new ClientException("统计异常！");
