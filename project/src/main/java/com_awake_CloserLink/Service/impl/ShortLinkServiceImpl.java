@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com_awake_CloserLink.Common.Constant.RedisKeyConstant.*;
 
@@ -78,6 +79,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private LinkBrowserStatsMapper linkBrowserStatsMapper;
     @Autowired
     private LinkOSStatsMapper linkOSStatsMapper;
+    @Autowired
+    private LinkAccessLogsMapper linkAccessLogsMapper;
 
 
     @Value("${shortLink.amap.key}")
@@ -296,16 +299,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     public void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
         Cookie[] cookies = ((HttpServletRequest) request).getCookies();
         AtomicBoolean uvIsFlag = new AtomicBoolean();
+        AtomicReference<String> uv = new AtomicReference<>();
         try {
             Runnable runnable = () -> {
                 //快速生成uuid
-                String uv = UUID.fastUUID().toString();
-                Cookie uvCookie = new Cookie("uv", uv);
+                uv.set(UUID.fastUUID().toString());
+                Cookie uvCookie = new Cookie("uv", uv.get());
                 //设置cookie有效期30天
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
                 uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.indexOf("/"), fullShortUrl.length()));
                 ((HttpServletResponse) response).addCookie(uvCookie);
-                stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl, uv);
+                stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl, uv.get());
                 //是否为新用户
                 uvIsFlag.set(true);
             };
@@ -395,9 +399,19 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .browser(browser)
                         .build();
                 linkBrowserStatsMapper.shortLinkStatsBrowser(linkBrowserStatsDO);
+
+                //统计高频ip
+                LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
+                        .ip(ipaddr)
+                        .gid(gid)
+                        .user(uv.get())
+                        .browser(browser)
+                        .os(os)
+                        .fullShortUrl(fullShortUrl)
+                        .build();
+                linkAccessLogsMapper.insert(linkAccessLogsDO);
+
             }
-
-
         } catch (Exception e) {
             throw new ClientException("统计异常！");
         }
