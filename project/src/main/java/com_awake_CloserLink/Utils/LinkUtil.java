@@ -94,4 +94,23 @@ public class LinkUtil {
             }
 
     }
+
+    /**
+     * 获取设备类型
+     */
+    public static String getDeviceType(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        // 这里可以使用正则表达式或者第三方库来解析User-Agent字符串
+        // 为了简化，这里仅做示意，实际应用中可能需要更复杂的解析逻辑
+        if (userAgent.contains("Mobile")) {
+            return "移动设备";
+        } else if (userAgent.contains("Windows")) {
+            return "Windows PC";
+        } else if (userAgent.contains("Macintosh")) {
+            return "Mac";
+        } else {
+            return "未知设备";
+        }
+    }
+
 }
