@@ -18,4 +18,8 @@ public class RedisKeyConstant {
      * 短链接reidskey
      */
     public static final String GOTO_IS_NOTNULL_SHORT_LINK_KEY = "goto_is_notnull_short_link_key_%s";
+    /**
+     * 高德地图ip地址api
+     */
+    public static final String AMAP_REMOTE_KEY = "https://restapi.amap.com/v3/ip";
 }
