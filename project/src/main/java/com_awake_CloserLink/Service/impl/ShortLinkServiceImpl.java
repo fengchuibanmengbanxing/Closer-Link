@@ -83,7 +83,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private LinkAccessLogsMapper linkAccessLogsMapper;
     @Autowired
     private LinkDeviceStatsMapper linkDeviceStatsMapper;
-
+    @Autowired
+    private LinkNetworkStatsMapper linkNetworkStatsMapper;
 
 
     @Value("${shortLink.amap.key}")
@@ -424,6 +425,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .device(device)
                         .build();
                 linkDeviceStatsMapper.shortLinkStatsDevice(linkDeviceStatsDO);
+
+
+                //统计访问网络
+                String network = LinkUtil.getNetwork((HttpServletRequest) request);
+                LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(date)
+                        .cnt(1)
+                        .network(network)
+                        .build();
+                linkNetworkStatsMapper.shortLinkStatsIp(linkNetworkStatsDO);
             }
         } catch (Exception e) {
             throw new ClientException("统计异常！");
