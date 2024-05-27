@@ -50,4 +50,18 @@ public class LinkAccessLogsDO {
      * IP
      */
     private String ip;
+
+    /**
+     * 访问设备
+     */
+    private String device;
+
+    /**
+     * 访问地区
+     */
+    private String locale;
+    /**
+     * 访问网络
+     */
+    private String network;
 }
