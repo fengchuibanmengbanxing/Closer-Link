@@ -404,16 +404,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .build();
                 linkBrowserStatsMapper.shortLinkStatsBrowser(linkBrowserStatsDO);
 
-                //统计高频ip
-                LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
-                        .ip(ipaddr)
-                        .gid(gid)
-                        .user(uv.get())
-                        .browser(browser)
-                        .os(os)
-                        .fullShortUrl(fullShortUrl)
-                        .build();
-                linkAccessLogsMapper.insert(linkAccessLogsDO);
 
                 //统计访问设备
                 String device = LinkUtil.getDeviceType((HttpServletRequest) request);
@@ -437,6 +427,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .network(network)
                         .build();
                 linkNetworkStatsMapper.shortLinkStatsIp(linkNetworkStatsDO);
+
+                //统计高频ip
+                LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
+                        .ip(ipaddr)
+                        .gid(gid)
+                        .user(uv.get())
+                        .browser(browser)
+                        .os(os)
+                        .fullShortUrl(fullShortUrl)
+                        .device(device)
+                        .network(network)
+                        .locale(StrUtil.join("-","中国",province,city,adCode))
+                        .build();
+                linkAccessLogsMapper.insert(linkAccessLogsDO);
             }
         } catch (Exception e) {
             throw new ClientException("统计异常！");
