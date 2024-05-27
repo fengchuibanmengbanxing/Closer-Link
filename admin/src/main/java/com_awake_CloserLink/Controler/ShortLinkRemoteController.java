@@ -7,6 +7,7 @@ import com_awake_CloserLink.Remote.Req.*;
 import com_awake_CloserLink.Remote.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkPageRespDTO;
+import com_awake_CloserLink.Remote.Resp.ShortLinkStatsRespDTO;
 import com_awake_CloserLink.Remote.ShortLinkRemoteService;
 import org.springframework.web.bind.annotation.*;
 
@@ -84,6 +85,14 @@ public class ShortLinkRemoteController {
     public Result<Void>removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO recycleBinRemoveReqDTO) {
         shortLinkRemoteService.removeRecycleBin(recycleBinRemoveReqDTO);
         return Results.success();
+    }
+
+    /**
+     * 获取监控信息
+     */
+    @PostMapping("/api/short-link/admin/v1/stats")
+    public Result<ShortLinkStatsRespDTO> linkStats(@RequestBody ShortLinkStatsReqDTO shortLinkStatsReqDTO) {
+        return shortLinkRemoteService.getOneStats(shortLinkStatsReqDTO);
     }
 
 }

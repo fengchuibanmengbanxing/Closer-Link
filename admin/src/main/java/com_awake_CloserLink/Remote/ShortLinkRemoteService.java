@@ -9,6 +9,7 @@ import com_awake_CloserLink.Remote.Req.*;
 import com_awake_CloserLink.Remote.Resp.ShortLinkCreatRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Remote.Resp.ShortLinkPageRespDTO;
+import com_awake_CloserLink.Remote.Resp.ShortLinkStatsRespDTO;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -96,4 +97,9 @@ public interface ShortLinkRemoteService {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/remove", JSON.toJSONString(recycleBinRemoveReqDTO));
     }
 
+    default Result<ShortLinkStatsRespDTO> getOneStats(ShortLinkStatsReqDTO shortLinkStatsReqDTO) {
+        String post = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/stats", JSON.toJSONString(shortLinkStatsReqDTO));
+        return JSON.parseObject(post, new TypeReference<Result<ShortLinkStatsRespDTO>>() {
+        });
+    }
 }

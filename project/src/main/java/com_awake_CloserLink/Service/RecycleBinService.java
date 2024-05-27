@@ -22,7 +22,6 @@ public interface RecycleBinService extends IService<LinkDO> {
 
     /**
      * 分页回收站
-     * @param shortLinkPageReqDTO
      * @return
      */
     IPage<ShortLinkPageRespDTO> pageRecycleBin(RecycleBinPageReqDTO RecycleBinPageReqDTO);
