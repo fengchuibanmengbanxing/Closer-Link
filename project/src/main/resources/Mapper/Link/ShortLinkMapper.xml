@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--接口全类名-->
+<mapper namespace="com_awake_CloserLink.Mapper.ShortLinkMapper">
+
+    <resultMap id="linkCountRespDTOResultMap" type="com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO">
+        <id property="gid" column="gid"/>
+        <result property="shortLinkCount" column="count(*)"/>
+    </resultMap>
+
+    <select id="getList" resultMap="linkCountRespDTOResultMap" resultType="java.util.List">
+        SELECT gid, COUNT(*) FROM t_link
+        WHERE enable_status = 1 AND gid IN
+        <foreach collection="gids" item="gid" open="(" separator="," close=")">
+            #{gid}
+        </foreach>
+        GROUP BY gid
+    </select>
+    <!--    短链接分页展示 requestParam-->
+    <!--    COALESCE(t_link_stats_today.today_pv, 0) as today_pv,-->
+    <!--    COALESCE(t_link_stats_today.today_uv, 0) as today_uv,-->
+    <!--    COALESCE(t_link_stats_today.today_ip_count, 0) as today_ip_count-->
+    <select id="pageLink" resultType="com_awake_CloserLink.Entitys.LinkDO">
+        SELECT t_link.*,
+        t_link_stats_today.today_pv as today_pv,
+        t_link_stats_today.today_uv as today_uv,
+        t_link_stats_today.today_ip_count as today_ip_count
+        FROM t_link
+        LEFT JOIN t_link_stats_today ON t_link.gid = t_link_stats_today.gid
+        and t_link.full_short_url = t_link_stats_today.full_short_url
+        and t_link_stats_today.date = CURDATE()
+        where t_link.gid = #{gid}
+        and t_link.enable_status = 1
+        and t_link.del_flag = 0
+        <choose>
+            <when test="orderTag == 'totalPv'">
+                order by t_link.total_pv desc
+            </when>
+            <when test="orderTag == 'totalUv'">
+                order by t_link.total_uv desc
+            </when>
+            <when test="orderTag == 'totalUip'">
+                order by t_link.total_uip desc
+            </when>
+            <when test="orderTag == 'todayPv'">
+                order by t_link_stats_today.today_pv desc
+            </when>
+            <when test="orderTag == 'todayUv'">
+                order by t_link_stats_today.today_uv desc
+            </when>
+            <when test="orderTag == 'todayUip'">
+                order by t_link_stats_today.today_ip_count desc
+            </when>
+        </choose>
+    </select>
+
+
+</mapper>
+
+        <!--文件名要与java包中全类名文件名一样否则程序会找不到-->
