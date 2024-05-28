@@ -225,6 +225,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             linkdo.setGid(shortLinkUpdateReqDTO.getGid());
             baseMapper.insert(linkdo);
         }
+        //新数据与旧数据有效类型，过期时间，原始网址是否相等
+        if (!Objects.equals(hasLinkDO.getValidDateType(), shortLinkUpdateReqDTO.getValidDateType())
+                || !Objects.equals(hasLinkDO.getValidDate(), shortLinkUpdateReqDTO.getValidDate())
+                || !Objects.equals(hasLinkDO.getOriginUrl(), shortLinkUpdateReqDTO.getOriginUrl())) {
+            //不相等删除关联表数据
+            stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, shortLinkUpdateReqDTO.getFullShortUrl()));
+            Date currentDate = new Date();
+            //若设置的过期时间在当前时间之后则删除redis空对象
+            if (hasLinkDO.getValidDate() != null && hasLinkDO.getValidDate().before(currentDate)) {
+                if (Objects.equals(shortLinkUpdateReqDTO.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()) || shortLinkUpdateReqDTO.getValidDate().after(currentDate)) {
+                    stringRedisTemplate.delete(String.format(GOTO_IS_NOTNULL_SHORT_LINK_KEY, shortLinkUpdateReqDTO.getFullShortUrl()));
+                }
+            }
+        }
     }
 
     /**
