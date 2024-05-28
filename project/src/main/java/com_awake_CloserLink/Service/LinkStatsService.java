@@ -1,6 +1,8 @@
 package com_awake_CloserLink.Service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsAccessRecordReqDTO;
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsAccessRecordReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsReqDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkStatsAccessRecordRespDTO;
@@ -24,4 +26,10 @@ public interface LinkStatsService {
      * @return
      */
     IPage<ShortLinkStatsAccessRecordRespDTO> getAccessRecordStats(ShortLinkStatsAccessRecordReqDTO shortLinkStatsAccessRecordReqDTO);
+    /**
+     * 访问分组短链接指定时间内监控数据
+     */
+    ShortLinkStatsRespDTO groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam);
+
+    IPage<ShortLinkStatsAccessRecordRespDTO> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam);
 }
