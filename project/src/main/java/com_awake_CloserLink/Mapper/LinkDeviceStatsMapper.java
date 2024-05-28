@@ -1,5 +1,6 @@
 package com_awake_CloserLink.Mapper;
 
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsReqDTO;
 import com_awake_CloserLink.Entitys.LinkDeviceStatsDO;
 import org.apache.ibatis.annotations.Insert;
@@ -43,23 +44,23 @@ public interface LinkDeviceStatsMapper {
             "    tlds.full_short_url, tl.gid, tlds.device;")
     List<LinkDeviceStatsDO> listDeviceStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
-//    /**
-//     * 根据分组获取指定日期内访问设备监控数据
-//     */
-//    @Select("SELECT " +
-//            "    tlds.device, " +
-//            "    SUM(tlds.cnt) AS cnt " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_device_stats tlds ON tl.full_short_url = tlds.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlds.date BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid, tlds.device;")
-//    List<LinkDeviceStatsDO> listDeviceStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+    /**
+     * 根据分组获取指定日期内访问设备监控数据
+     */
+    @Select("SELECT " +
+            "    tlds.device, " +
+            "    SUM(tlds.cnt) AS cnt " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_device_stats tlds ON tl.full_short_url = tlds.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '0' " +
+            "    AND tlds.date BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid, tlds.device;")
+    List<LinkDeviceStatsDO> listDeviceStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
 
 }

@@ -1,6 +1,9 @@
 package com_awake_CloserLink.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsAccessRecordReqDTO;
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsReqDTO;
 import com_awake_CloserLink.Entitys.LinkAccessLogsDO;
 import com_awake_CloserLink.Entitys.LinkAccessStatsDO;
@@ -169,36 +172,39 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "    tlal.full_short_url, tl.gid;")
     LinkAccessStatsDO findPvUvUidStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
-//    /**
-//     * 根据分组获取指定日期内PV、UV、UIP数据
-//     */
-//    @Select("SELECT " +
-//            "    COUNT(tlal.user) AS pv, " +
-//            "    COUNT(DISTINCT tlal.user) AS uv, " +
-//            "    COUNT(DISTINCT tlal.ip) AS uip " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid;")
-//    LinkAccessStatsDO findPvUvUidStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
-//
-//    @Select("SELECT " +
-//            "    tlal.* " +
-//            "FROM " +
-//            "    t_link tl " +
-//            "    INNER JOIN t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "ORDER BY " +
-//            "    tlal.create_time DESC")
-//    IPage<LinkAccessLogsDO> selectGroupPage(@Param("param") ShortLinkGroupStatsAccessRecordReqDTO requestParam);
+    /**
+     * 根据分组获取指定日期内PV、UV、UIP数据
+     */
+    @Select("SELECT " +
+            "    COUNT(tlal.user) AS pv, " +
+            "    COUNT(DISTINCT tlal.user) AS uv, " +
+            "    COUNT(DISTINCT tlal.ip) AS uip " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '0' " +
+            "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid;")
+    LinkAccessStatsDO findPvUvUidStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+
+    @Select("SELECT " +
+            "    tlal.* " +
+            "FROM " +
+            "    t_link tl " +
+            "    INNER JOIN t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '0' " +
+            "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
+            "ORDER BY " +
+            "    tlal.create_time DESC")
+    IPage<LinkAccessLogsDO> selectGroupPage(@Param("param") ShortLinkGroupStatsAccessRecordReqDTO requestParam);
+
+
+
 }

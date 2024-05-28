@@ -1,5 +1,6 @@
 package com_awake_CloserLink.Mapper;
 
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsReqDTO;
 import com_awake_CloserLink.Entitys.LinkAccessStatsDO;
 import org.apache.ibatis.annotations.Insert;
@@ -95,23 +96,23 @@ public interface LinkAccessStatsMapper {
             "    tlas.full_short_url, tl.gid, tlas.hour;")
     List<LinkAccessStatsDO> listHourStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
-//    /**
-//     * 根据分组获取指定日期内小时基础监控数据
-//     */
-//    @Select("SELECT " +
-//            "    tlas.hour, " +
-//            "    SUM(tlas.pv) AS pv " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid, tlas.hour;")
-//    List<LinkAccessStatsDO> listHourStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+    /**
+     * 根据分组获取指定日期内小时基础监控数据
+     */
+    @Select("SELECT " +
+            "    tlas.hour, " +
+            "    SUM(tlas.pv) AS pv " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '0' " +
+            "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid, tlas.hour;")
+    List<LinkAccessStatsDO> listHourStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
      * 根据短链接获取指定日期内小时基础监控数据
@@ -132,24 +133,24 @@ public interface LinkAccessStatsMapper {
             "    tlas.full_short_url, tl.gid, tlas.weekday;")
     List<LinkAccessStatsDO> listWeekdayStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
-//    /**
-//     * 根据分组获取指定日期内小时基础监控数据
-//     */
-//    @Select("SELECT " +
-//            "    tlas.weekday, " +
-//            "    SUM(tlas.pv) AS pv " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid, tlas.weekday;")
-//    List<LinkAccessStatsDO> listWeekdayStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
-//
+    /**
+     * 根据分组获取指定日期内小时基础监控数据
+     */
+    @Select("SELECT " +
+            "    tlas.weekday, " +
+            "    SUM(tlas.pv) AS pv " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '0' " +
+            "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid, tlas.weekday;")
+    List<LinkAccessStatsDO> listWeekdayStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+
 
 }
 

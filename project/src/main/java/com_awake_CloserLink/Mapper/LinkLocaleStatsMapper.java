@@ -1,5 +1,6 @@
 package com_awake_CloserLink.Mapper;
 
+import com_awake_CloserLink.Dto.Req.ShortLinkGroupStatsReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsReqDTO;
 import com_awake_CloserLink.Entitys.LinkLocaleStatsDO;
 import org.apache.ibatis.annotations.Insert;
@@ -42,23 +43,23 @@ public interface LinkLocaleStatsMapper {
             "    tlls.full_short_url, tl.gid, tlls.province;")
     List<LinkLocaleStatsDO> listLocaleByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
-//    /**
-//     * 根据分组获取指定日期内地区监控数据
-//     */
-//    @Select("SELECT " +
-//            "    tlls.province, " +
-//            "    SUM(tlls.cnt) AS cnt " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_locale_stats tlls ON tl.full_short_url = tlls.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlls.date BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid, tlls.province;")
-//    List<LinkLocaleStatsDO> listLocaleByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+    /**
+     * 根据分组获取指定日期内地区监控数据
+     */
+    @Select("SELECT " +
+            "    tlls.province, " +
+            "    SUM(tlls.cnt) AS cnt " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_locale_stats tlls ON tl.full_short_url = tlls.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '0' " +
+            "    AND tlls.date BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid, tlls.province;")
+    List<LinkLocaleStatsDO> listLocaleByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
 
 
