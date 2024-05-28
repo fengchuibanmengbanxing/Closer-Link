@@ -17,4 +17,8 @@ public class ShortLinkPageReqDTO extends Page {
      * 分组标识
      */
     public String gid;
+    /**
+     * 排序标识
+     */
+    public String orderTag;
 }
