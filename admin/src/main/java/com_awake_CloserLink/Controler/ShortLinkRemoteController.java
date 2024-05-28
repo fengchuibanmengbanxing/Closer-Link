@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
 import com_awake_CloserLink.Remote.Req.*;
-import com_awake_CloserLink.Remote.Resp.ShortLinkCreatRespDTO;
-import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
-import com_awake_CloserLink.Remote.Resp.ShortLinkPageRespDTO;
-import com_awake_CloserLink.Remote.Resp.ShortLinkStatsRespDTO;
+import com_awake_CloserLink.Remote.Resp.*;
 import com_awake_CloserLink.Remote.ShortLinkRemoteService;
 import org.springframework.web.bind.annotation.*;
 
@@ -93,6 +90,11 @@ public class ShortLinkRemoteController {
     @PostMapping("/api/short-link/admin/v1/stats")
     public Result<ShortLinkStatsRespDTO> linkStats(@RequestBody ShortLinkStatsReqDTO shortLinkStatsReqDTO) {
         return shortLinkRemoteService.getOneStats(shortLinkStatsReqDTO);
+    }
+
+    @PostMapping("/api/short-link/admin/v1/stats/access-record")
+    public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> linkAccessRecordStats(@RequestBody ShortLinkStatsAccessRecordReqDTO shortLinkStatsAccessRecordReqDTO) {
+        return shortLinkRemoteService.linkAccessRecordStats(shortLinkStatsAccessRecordReqDTO);
     }
 
 }

@@ -6,10 +6,7 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Remote.Req.*;
-import com_awake_CloserLink.Remote.Resp.ShortLinkCreatRespDTO;
-import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
-import com_awake_CloserLink.Remote.Resp.ShortLinkPageRespDTO;
-import com_awake_CloserLink.Remote.Resp.ShortLinkStatsRespDTO;
+import com_awake_CloserLink.Remote.Resp.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -34,6 +31,7 @@ public interface ShortLinkRemoteService {
     default Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO shortLinkPageReqDTO) {
         HashMap<String, Object> resultMap = new HashMap<>();
         resultMap.put("gid", shortLinkPageReqDTO.getGid());
+        resultMap.put("orderTag", shortLinkPageReqDTO.getOrderTag());
         resultMap.put("page", shortLinkPageReqDTO.getCurrent());
         resultMap.put("size", shortLinkPageReqDTO.getSize());
         String s = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/page", resultMap);
@@ -100,6 +98,13 @@ public interface ShortLinkRemoteService {
     default Result<ShortLinkStatsRespDTO> getOneStats(ShortLinkStatsReqDTO shortLinkStatsReqDTO) {
         String post = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/stats", JSON.toJSONString(shortLinkStatsReqDTO));
         return JSON.parseObject(post, new TypeReference<Result<ShortLinkStatsRespDTO>>() {
+        });
+    }
+
+
+    default Result<IPage<ShortLinkStatsAccessRecordRespDTO>> linkAccessRecordStats(@RequestBody ShortLinkStatsAccessRecordReqDTO shortLinkStatsAccessRecordReqDTO) {
+        String post = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/stats/access-record", JSON.toJSONString(shortLinkStatsAccessRecordReqDTO));
+      return JSON.parseObject(post, new TypeReference<Result<IPage<ShortLinkStatsAccessRecordRespDTO>>>() {
         });
     }
 }
