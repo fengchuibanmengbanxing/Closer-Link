@@ -19,10 +19,12 @@ spring:
       suffix: .html
 mybatis:
   #  引入配置文件
-#  config-location: classpath:/mybatis-config.xml
+  #  config-location: classpath:/mybatis-config.xml
   #  设置资源路径
   mapper-locations: classpath:/Mapper/*/*.xml
 
 shortLink:
   amap:
     key: 460c0075ca51d0ba13afb4e6deb14d32
+  domain:
+    default: qx.ink:8001
