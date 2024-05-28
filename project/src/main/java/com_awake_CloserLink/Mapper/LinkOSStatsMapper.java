@@ -55,7 +55,7 @@ public interface LinkOSStatsMapper {
             "WHERE " +
             "    tl.gid = #{param.gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlos.date BETWEEN #{param.startDate} and #{param.endDate} " +
             "GROUP BY " +
             "    tl.gid, tlos.os;")
