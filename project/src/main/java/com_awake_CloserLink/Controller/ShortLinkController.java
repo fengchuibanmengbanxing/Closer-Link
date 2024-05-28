@@ -42,8 +42,8 @@ public class ShortLinkController {
      * @return
      */
     @GetMapping("/api/short-link/v1/page")
-    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink( ShortLinkPageReqDTO shortLinkPageReqDTO){
-        return Results.success(shortLinkService.pageShortLink(shortLinkPageReqDTO));
+    public Result<IPage<ShortLinkPageRespDTO>> pageLink( ShortLinkPageReqDTO shortLinkPageReqDTO){
+        return Results.success(shortLinkService.pageLink(shortLinkPageReqDTO));
     }
 
     /**
@@ -78,5 +78,15 @@ public class ShortLinkController {
     public void restoreUrl(@PathVariable ("short-link") String shortLink, ServletResponse response, ServletRequest request) throws IOException {
         shortLinkService.restoreUrl(shortLink,request,response);
     }
+
+//    /**
+//     * 分页查询短链接
+//
+//     * @throws IOException
+//     */
+//    @PostMapping("/api/short-link/v1/update")
+//    public Result<IPage<ShortLinkPageRespDTO>> pageLink(@RequestBody ShortLinkPageReqDTO shortLinkPageReqDTO )  {
+//        return Results.success(shortLinkService.pageLink(shortLinkPageReqDTO));
+//    }
 
 }
