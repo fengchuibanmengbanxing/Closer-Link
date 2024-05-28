@@ -56,26 +56,26 @@ public interface LinkAccessStatsMapper {
             "GROUP BY " +
             "    tlas.full_short_url, tl.gid, tlas.date;")
     List<LinkAccessStatsDO> listStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
-//
-//    /**
-//     * 根据分组获取指定日期内基础监控数据
-//     */
-//    @Select("SELECT " +
-//            "    tlas.date, " +
-//            "    SUM(tlas.pv) AS pv, " +
-//            "    SUM(tlas.uv) AS uv, " +
-//            "    SUM(tlas.uip) AS uip " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid, tlas.date;")
-//    List<LinkAccessStatsDO> listStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期内基础监控数据
+     */
+    @Select("SELECT " +
+            "    tlas.date, " +
+            "    SUM(tlas.pv) AS pv, " +
+            "    SUM(tlas.uv) AS uv, " +
+            "    SUM(tlas.uip) AS uip " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '1' " +
+            "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid, tlas.date;")
+    List<LinkAccessStatsDO> listStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
      * 根据短链接获取指定日期内小时基础监控数据
@@ -108,7 +108,7 @@ public interface LinkAccessStatsMapper {
             "WHERE " +
             "    tl.gid = #{param.gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
             "GROUP BY " +
             "    tl.gid, tlas.hour;")
@@ -145,7 +145,7 @@ public interface LinkAccessStatsMapper {
             "WHERE " +
             "    tl.gid = #{param.gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlas.date BETWEEN #{param.startDate} and #{param.endDate} " +
             "GROUP BY " +
             "    tl.gid, tlas.weekday;")

@@ -43,26 +43,26 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "LIMIT 5;")
     List<HashMap<String, Object>> listTopIpByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
-//    /**
-//     * 根据分组获取指定日期内高频访问IP数据
-//     */
-//    @Select("SELECT " +
-//            "    tlal.ip, " +
-//            "    COUNT(tlal.ip) AS count " +
-//            "FROM " +
-//            "    t_link tl INNER JOIN " +
-//            "    t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url " +
-//            "WHERE " +
-//            "    tl.gid = #{param.gid} " +
-//            "    AND tl.del_flag = '0' " +
-//            "    AND tl.enable_status = '0' " +
-//            "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
-//            "GROUP BY " +
-//            "    tl.gid, tlal.ip " +
-//            "ORDER BY " +
-//            "    count DESC " +
-//            "LIMIT 5;")
-//    List<HashMap<String, Object>> listTopIpByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+    /**
+     * 根据分组获取指定日期内高频访问IP数据
+     */
+    @Select("SELECT " +
+            "    tlal.ip, " +
+            "    COUNT(tlal.ip) AS count " +
+            "FROM " +
+            "    t_link tl INNER JOIN " +
+            "    t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url " +
+            "WHERE " +
+            "    tl.gid = #{param.gid} " +
+            "    AND tl.del_flag = '0' " +
+            "    AND tl.enable_status = '1' " +
+            "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    tl.gid, tlal.ip " +
+            "ORDER BY " +
+            "    count DESC " +
+            "LIMIT 5;")
+    List<HashMap<String, Object>> listTopIpByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
      * 根据短链接获取指定日期内新旧访客数据
@@ -137,7 +137,7 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "WHERE " +
             "    tl.gid = #{gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlal.user IN " +
             "    <foreach item='item' index='index' collection='userAccessLogsList' open='(' separator=',' close=')'> " +
             "        #{item} " +
@@ -185,7 +185,7 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "WHERE " +
             "    tl.gid = #{param.gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
             "GROUP BY " +
             "    tl.gid;")
@@ -199,7 +199,7 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "WHERE " +
             "    tl.gid = #{param.gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate} " +
             "ORDER BY " +
             "    tlal.create_time DESC")

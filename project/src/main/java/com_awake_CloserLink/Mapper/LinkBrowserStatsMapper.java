@@ -59,7 +59,7 @@ public interface LinkBrowserStatsMapper {
             "WHERE " +
             "    tl.gid = #{param.gid} " +
             "    AND tl.del_flag = '0' " +
-            "    AND tl.enable_status = '0' " +
+            "    AND tl.enable_status = '1' " +
             "    AND tlbs.date BETWEEN #{param.startDate} and #{param.endDate} " +
             "GROUP BY " +
             "    tl.gid, tlbs.browser;")
