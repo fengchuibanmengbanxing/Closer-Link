@@ -53,4 +53,11 @@ public interface ShortLinkService extends IService<LinkDO> {
      * @param response  http响应
      */
     void restoreUrl(String shortLink, ServletRequest request, ServletResponse response) throws IOException;
+
+    /**
+     * 短链接分页展示
+     * @param shortLinkPageReqDTO
+     * @return
+     */
+    IPage<ShortLinkPageRespDTO> pageLink(ShortLinkPageReqDTO shortLinkPageReqDTO);
 }
