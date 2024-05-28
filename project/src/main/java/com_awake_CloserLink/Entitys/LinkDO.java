@@ -96,4 +96,19 @@ public class LinkDO extends BaseDO {
      */
     private String favicon;
 
+    /**
+     * PV
+     */
+    private Integer totalPv;
+
+    /**
+     * UV
+     */
+    private Integer totalUv;
+    /**
+     * uip
+     */
+    private Integer totalUip;
+
+
 }

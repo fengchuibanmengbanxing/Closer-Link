@@ -1,7 +1,6 @@
 package com_awake_CloserLink.Entitys;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com_awake_CloserLink.Common.Database.BaseDO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LinkAccessLogsDO extends BaseDO {
+public class LinkAccessLogsDO {
     /**
      * ID
      */
