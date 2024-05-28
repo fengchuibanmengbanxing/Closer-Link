@@ -1,4 +1,4 @@
-package com_awake_CloserLink.Dto.Req;
+package com_awake_CloserLink.Remote.Req;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com_awake_CloserLink.Entitys.LinkAccessLogsDO;
@@ -25,5 +25,4 @@ public class ShortLinkGroupStatsAccessRecordReqDTO extends Page<LinkAccessLogsDO
      * 结束日期
      */
     private String endDate;
-
 }
