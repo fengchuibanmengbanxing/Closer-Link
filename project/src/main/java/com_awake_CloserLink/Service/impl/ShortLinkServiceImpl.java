@@ -87,10 +87,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private LinkNetworkStatsMapper linkNetworkStatsMapper;
     @Autowired
     private LinkStatsTodayMapper linkStatsTodayMapper;
-
-
     @Value("${shortLink.amap.key}")
     private String amapKey;
+    @Value("${shortLink.domain.default}")
+    private String createDomainDefault;
+
 
     //创建短链接
     @Override
@@ -98,11 +99,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         //短链接后缀
         String generateSuffix = generateSuffix(shortLinkCreatReqDTO);
         LinkDO shortLinkDO = BeanUtil.toBean(shortLinkCreatReqDTO, LinkDO.class);
-        String fullShortUrl = shortLinkDO.getDomain() + "/" + generateSuffix;
+        String fullShortUrl ;
+        StringBuilder stringBuilder = new StringBuilder(createDomainDefault);
+        fullShortUrl=stringBuilder.append("/").append(generateSuffix).toString();
         if (shortLinkCreatCachePenetrationBloomFilter.contains(fullShortUrl)) {
             throw new ClientException("短链接已经存在！");
         }
         //设置完整短链接
+        shortLinkDO.setDomain(createDomainDefault);
         shortLinkDO.setFullShortUrl(fullShortUrl);
         shortLinkDO.setEnableStatus(1);
         shortLinkDO.setShortUri(generateSuffix);
@@ -234,8 +238,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     public void restoreUrl(String shortLink, ServletRequest request, ServletResponse response) throws IOException {
         //获取主机名
         String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
         //完整短链接
-        String fullShortLink = serverName + "/" + shortLink;
+        String fullShortLink = serverName +":"+serverPort+ "/" + shortLink;
         //创建短链接时就已经加入布隆过滤器了
         boolean contains = shortLinkCreatCachePenetrationBloomFilter.contains(fullShortLink);
         //不存在直接返回
@@ -457,7 +462,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                     .fullShortUrl(fullShortUrl)
                     .device(device)
                     .network(network)
-                    .locale(StrUtil.join("-", "中国", province, city, adCode))
+                    .locale(StrUtil.join("-", "中国", unKnownFlag ? province : "未知", unKnownFlag ? city : "未知", unKnownFlag ? adCode : "未知"))
                     .build();
             linkAccessLogsMapper.insert(linkAccessLogsDO);
             baseMapper.incrementStats(gid, fullShortUrl, uvIsFlag.get() ? 1 : 0, 1, ipIsFlag.get() ? 1 : 0);
