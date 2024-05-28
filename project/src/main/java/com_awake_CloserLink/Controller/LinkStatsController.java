@@ -1,8 +1,11 @@
 package com_awake_CloserLink.Controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
+import com_awake_CloserLink.Dto.Req.ShortLinkStatsAccessRecordReqDTO;
 import com_awake_CloserLink.Dto.Req.ShortLinkStatsReqDTO;
+import com_awake_CloserLink.Dto.Resp.ShortLinkStatsAccessRecordRespDTO;
 import com_awake_CloserLink.Dto.Resp.ShortLinkStatsRespDTO;
 import com_awake_CloserLink.Service.LinkStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,4 +27,16 @@ public class LinkStatsController {
         ShortLinkStatsRespDTO shortLinkStatsRespDTO=linkStatsService.getOneStats(shortLinkStatsReqDTO);
         return Results.success(shortLinkStatsRespDTO);
     }
+
+    /**
+     * 单一短链接监控
+     * @param shortLinkStatsAccessRecordReqDTO
+     * @return
+     */
+    @PostMapping("/api/short-link/v1/stats/access-record")
+    public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> linkAccessRecordStats(@RequestBody ShortLinkStatsAccessRecordReqDTO shortLinkStatsAccessRecordReqDTO) {
+        return Results.success(linkStatsService.getAccessRecordStats(shortLinkStatsAccessRecordReqDTO));
+    }
+
+
 }
