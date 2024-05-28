@@ -17,6 +17,11 @@ spring:
     view:
       prefix: /templates/
       suffix: .html
+mybatis:
+  #  引入配置文件
+#  config-location: classpath:/mybatis-config.xml
+  #  设置资源路径
+  mapper-locations: classpath:/Mapper/*/*.xml
 
 shortLink:
   amap:
