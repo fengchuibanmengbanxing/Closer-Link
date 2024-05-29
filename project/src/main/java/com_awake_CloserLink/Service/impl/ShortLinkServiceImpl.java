@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com_awake_CloserLink.Common.Config.GotoDomainWhiteListConfiguration;
 import com_awake_CloserLink.Common.Convention.Exception.ClientException;
 import com_awake_CloserLink.Common.Convention.Exception.ServiceException;
 import com_awake_CloserLink.Common.Enums.VailDateTypeEnum;
@@ -37,6 +38,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -87,21 +89,26 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     private LinkNetworkStatsMapper linkNetworkStatsMapper;
     @Autowired
     private LinkStatsTodayMapper linkStatsTodayMapper;
+
+    @Autowired
+    private GotoDomainWhiteListConfiguration gotoDomainWhiteListConfiguration;
     @Value("${shortLink.amap.key}")
     private String amapKey;
     @Value("${shortLink.domain.default}")
     private String createDomainDefault;
 
 
+
     //创建短链接
     @Override
     public ShortLinkCreatRespDTO creatShortLink(ShortLinkCreatReqDTO shortLinkCreatReqDTO) {
+        verificationWhitelist(shortLinkCreatReqDTO.getOriginUrl());
         //短链接后缀
         String generateSuffix = generateSuffix(shortLinkCreatReqDTO);
         LinkDO shortLinkDO = BeanUtil.toBean(shortLinkCreatReqDTO, LinkDO.class);
-        String fullShortUrl ;
+        String fullShortUrl;
         StringBuilder stringBuilder = new StringBuilder(createDomainDefault);
-        fullShortUrl=stringBuilder.append("/").append(generateSuffix).toString();
+        fullShortUrl = stringBuilder.append("/").append(generateSuffix).toString();
         if (shortLinkCreatCachePenetrationBloomFilter.contains(fullShortUrl)) {
             throw new ClientException("短链接已经存在！");
         }
@@ -184,6 +191,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void updateShortLink(ShortLinkUpdateReqDTO shortLinkUpdateReqDTO) {
+        verificationWhitelist(shortLinkUpdateReqDTO.getOriginUrl());
         LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
                 .eq(LinkDO::getGid, shortLinkUpdateReqDTO.getGid())
                 .eq(LinkDO::getFullShortUrl, shortLinkUpdateReqDTO.getFullShortUrl())
@@ -194,16 +202,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         if (hasLinkDO == null) {
             throw new ClientException("短链接记录不存在！");
         }
-        LinkDO linkdo = LinkDO.builder()
-                .gid(shortLinkUpdateReqDTO.getGid())
-                .fullShortUrl(shortLinkUpdateReqDTO.getFullShortUrl())
-                .originUrl(shortLinkUpdateReqDTO.getOriginUrl())
-                .describe(shortLinkUpdateReqDTO.getDescribe())
-                .domain(shortLinkUpdateReqDTO.getDomain())
-                .favicon(shortLinkUpdateReqDTO.getFavicon())
-                .validDate(shortLinkUpdateReqDTO.getValidDate())
-                .validDateType(shortLinkUpdateReqDTO.getValidDateType())
-                .build();
+
         //判断数据库中与新数据gid是否一致
         if (Objects.equals(hasLinkDO.getGid(), shortLinkUpdateReqDTO.getGid())) {
             LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
@@ -211,19 +210,72 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                     .eq(LinkDO::getFullShortUrl, shortLinkUpdateReqDTO.getFullShortUrl())
                     .eq(LinkDO::getDelFlag, 0)
                     .eq(LinkDO::getEnableStatus, 1)
+                    .eq(LinkDO::getDelTime, 0L)
                     .set(Objects.equals(shortLinkUpdateReqDTO.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()), LinkDO::getValidDate, null);
+            LinkDO linkdo = LinkDO.builder()
+                    .gid(shortLinkUpdateReqDTO.getGid())
+                    .fullShortUrl(shortLinkUpdateReqDTO.getFullShortUrl())
+                    .originUrl(shortLinkUpdateReqDTO.getOriginUrl())
+                    .describe(shortLinkUpdateReqDTO.getDescribe())
+                    .domain(shortLinkUpdateReqDTO.getDomain())
+                    .favicon(shortLinkUpdateReqDTO.getFavicon())
+                    .createdType(hasLinkDO.getCreatedType())
+                    .validDate(shortLinkUpdateReqDTO.getValidDate())
+                    .validDateType(shortLinkUpdateReqDTO.getValidDateType())
+                    .build();
             baseMapper.update(linkdo, updateWrapper);
         } else {
-            LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
-                    .eq(LinkDO::getGid, shortLinkUpdateReqDTO.getGid())
-                    .eq(LinkDO::getOriginUrl, shortLinkUpdateReqDTO.getOriginUrl())
-                    .eq(LinkDO::getDelFlag, 0)
-                    .eq(LinkDO::getEnableStatus, 1)
-                    .set(Objects.equals(shortLinkUpdateReqDTO.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()), LinkDO::getValidDate, null);
-            //涉及两个操作要加声明式事务
-            baseMapper.delete(updateWrapper);
-            linkdo.setGid(shortLinkUpdateReqDTO.getGid());
-            baseMapper.insert(linkdo);
+            // 为什么监控表要加上Gid？不加的话是否就不存在读写锁？详情查看：https://nageoffer.com/shortlink/question
+            RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, shortLinkUpdateReqDTO.getFullShortUrl()));
+            RLock rLock = readWriteLock.writeLock();
+            rLock.lock();
+
+            try {
+                //为旧数据添加过期设置时间
+                LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
+                        .eq(LinkDO::getGid, shortLinkUpdateReqDTO.getGid())
+                        .eq(LinkDO::getOriginUrl, shortLinkUpdateReqDTO.getOriginUrl())
+                        .eq(LinkDO::getDelFlag, 0)
+                        .eq(LinkDO::getEnableStatus, 1);
+                LinkDO delShortLinkDO = LinkDO.builder()
+                        .delTime(System.currentTimeMillis())
+                        .build();
+                delShortLinkDO.setDelFlag(1);
+                baseMapper.update(delShortLinkDO, updateWrapper);
+
+                LinkDO linkDO = LinkDO.builder()
+                        .domain(createDomainDefault)
+                        .originUrl(shortLinkUpdateReqDTO.getOriginUrl())
+                        .gid(shortLinkUpdateReqDTO.getGid())
+                        .createdType(hasLinkDO.getCreatedType())
+                        .validDateType(shortLinkUpdateReqDTO.getValidDateType())
+                        .validDate(shortLinkUpdateReqDTO.getValidDate())
+                        .describe(shortLinkUpdateReqDTO.getDescribe())
+                        .shortUri(hasLinkDO.getShortUri())
+                        .enableStatus(hasLinkDO.getEnableStatus())
+                        .totalPv(hasLinkDO.getTotalPv())
+                        .totalUv(hasLinkDO.getTotalUv())
+                        .totalUip(hasLinkDO.getTotalUip())
+                        .fullShortUrl(hasLinkDO.getFullShortUrl())
+                        .favicon(SslUtils.getFaviconUrl(shortLinkUpdateReqDTO.getOriginUrl()))
+                        .delTime(0L)
+                        .build();
+                baseMapper.insert(linkDO);
+                //由于gid发生改变因此需要更给goto表的关系链接
+                LambdaQueryWrapper<LinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(LinkGotoDO.class)
+                        .eq(LinkGotoDO::getFullShortUrl, shortLinkUpdateReqDTO.getFullShortUrl())
+                        .eq(LinkGotoDO::getGid, hasLinkDO.getGid());
+                //查询更改前数据
+                LinkGotoDO linkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
+                shortLinkGotoMapper.delete(linkGotoQueryWrapper);
+                //设置新gid
+                linkGotoDO.setGid(shortLinkUpdateReqDTO.getGid());
+                shortLinkGotoMapper.insert(linkGotoDO);
+
+            } finally {
+                //释放读写锁
+                rLock.unlock();
+            }
         }
         //新数据与旧数据有效类型，过期时间，原始网址是否相等
         if (!Objects.equals(hasLinkDO.getValidDateType(), shortLinkUpdateReqDTO.getValidDateType())
@@ -241,6 +293,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         }
     }
 
+
     /**
      * 短链接跳转真实网址
      *
@@ -254,7 +307,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
         //完整短链接
-        String fullShortLink = serverName +":"+serverPort+ "/" + shortLink;
+        String fullShortLink = serverName + ":" + serverPort + "/" + shortLink;
         //创建短链接时就已经加入布隆过滤器了
         boolean contains = shortLinkCreatCachePenetrationBloomFilter.contains(fullShortLink);
         //不存在直接返回
@@ -338,6 +391,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
 
     //统计
     public void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
+
+
         Cookie[] cookies = ((HttpServletRequest) request).getCookies();
         AtomicBoolean uvIsFlag = new AtomicBoolean();
         AtomicReference<String> uv = new AtomicReference<>();
@@ -519,4 +574,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         }
         return shortUri;
     }
+
+    private void verificationWhitelist(String originUrl) {
+        Boolean enable = gotoDomainWhiteListConfiguration.getEnable();
+        if (enable == null || !enable) {
+            return;
+        }
+        String domain = LinkUtil.extractDomain(originUrl);
+        if (StrUtil.isBlank(domain)) {
+            throw new ClientException("跳转链接填写错误");
+        }
+        List<String> details = gotoDomainWhiteListConfiguration.getDetails();
+        if (!details.contains(domain)) {
+            throw new ClientException("演示环境为避免恶意攻击，请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
+        }
+    }
+
 }
