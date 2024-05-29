@@ -22,4 +22,8 @@ public class RedisKeyConstant {
      * 高德地图ip地址api
      */
     public static final String AMAP_REMOTE_KEY = "https://restapi.amap.com/v3/ip";
+    /**
+     * 短链接修改分组 ID 锁前缀 Key
+     */
+    public static final String LOCK_GID_UPDATE_KEY = "short-link:lock:update-gid:%s";
 }
