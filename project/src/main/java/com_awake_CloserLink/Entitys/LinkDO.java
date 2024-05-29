@@ -110,5 +110,8 @@ public class LinkDO extends BaseDO {
      */
     private Integer totalUip;
 
-
+    /**
+     * 删除时间
+     */
+    private Long delTime;
 }
