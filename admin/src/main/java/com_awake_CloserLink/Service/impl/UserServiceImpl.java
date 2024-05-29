@@ -22,7 +22,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -125,7 +127,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (userDO == null) {
             throw new ClientException("用户不存在！");
         }
-        //避免第三方多次登录使用hash结构
+        //避免第三方多次登录使用hash结构(一个用户可以登录多次直接返回最新token不再重复加入reids)
+        Map<Object, Object> hasMaps = stringRedisTemplate.opsForHash().entries("login:" + userDO.getUsername());
+        if(!CollectionUtils.isEmpty(hasMaps)){
+          String token=hasMaps.keySet().stream().findFirst().map(Object::toString).orElseThrow(() -> new ClientException("用户登录错误！"));
+        return new UserLoginRespDTO(token);
+        }
+
         //将登录用户存放入redis
         String uuid = UUID.randomUUID().toString().replace("-", "");
         stringRedisTemplate.opsForHash().put("login:" + userLoginReqDTO.getUsername(), uuid, JSON.toJSONString(userDO));
