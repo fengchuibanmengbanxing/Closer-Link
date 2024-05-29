@@ -7,8 +7,10 @@ package com_awake_CloserLink.Utils;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.Optional;
 
@@ -123,4 +125,26 @@ public class LinkUtil {
         return actualIp.startsWith("192.168.") || actualIp.startsWith("10.")||actualIp.startsWith("127.0.") ? "WIFI" : "Mobile";
     }
 
+    /**
+     * 获取原始链接中的域名
+     * 如果原始链接包含 www 开头的话需要去掉
+     *
+     * @param url 创建或者修改短链接的原始链接
+     * @return 原始链接中的域名
+     */
+    public static String extractDomain(String url) {
+        String domain = null;
+        try {
+            URI uri = new URI(url);
+            String host = uri.getHost();
+            if (StrUtil.isNotBlank(host)) {
+                domain = host;
+                if (domain.startsWith("www.")) {
+                    domain = host.substring(4);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return domain;
+    }
 }
