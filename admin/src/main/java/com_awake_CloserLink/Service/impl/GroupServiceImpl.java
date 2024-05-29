@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com_awake_CloserLink.Common.Biz.UserContext;
+import com_awake_CloserLink.Common.Convention.Exception.ClientException;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Dto.Request.ShortLinkSortGroupReqDTO;
 import com_awake_CloserLink.Dto.Request.ShortLinkUpdateGroupReqDTO;
@@ -16,11 +17,18 @@ import com_awake_CloserLink.Remote.Resp.ShortLinkGroupCountQueryRespDTO;
 import com_awake_CloserLink.Remote.ShortLinkRemoteService;
 import com_awake_CloserLink.Service.GroupService;
 import com_awake_CloserLink.Utils.RandomUtil;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static com_awake_CloserLink.Common.Constant.RedisCacheConstant.LOCK_GROUP_CREATE_KEY;
 
 /**
  * @Author 清醒
@@ -31,6 +39,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
     };
+
+    @Autowired
+    private RedissonClient redissonClient;
+
+    @Value("short-link.group.size")
+    private int groupSize;
 
     /**
      * 保存短链接组
@@ -45,23 +59,37 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     //注册后默认创建分组
     @Override
-    public void saveGroup(String username,String groupName) {
-        /**
-         * 生成随机六位数据组id
-         */
-        String gid = RandomUtil.generateRandomCode();
-        while (true) {
-            if (!hasGid(username,gid)) {
-                break;
+    public void saveGroup(String username, String groupName) {
+        RLock lock = redissonClient.getLock(String.format(LOCK_GROUP_CREATE_KEY, username));
+        lock.lock();
+        //用户分组创建锁（防止多端登录创建）
+        try {
+            LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                    .eq(GroupDO::getUsername, username);
+            List<GroupDO> groupDOS = baseMapper.selectList(queryWrapper);
+            if (!CollectionUtils.isEmpty(groupDOS) && groupDOS.size() == groupSize) {
+                throw new ClientException("用户分组上限！");
             }
+            /**
+             * 生成随机六位数据组id
+             */
+            String gid = RandomUtil.generateRandomCode();
+            while (true) {
+                if (!hasGid(username, gid)) {
+                    break;
+                }
+            }
+            GroupDO groupDO = GroupDO.builder()
+                    .gid(gid)
+                    .name(groupName)
+                    .username(username)
+                    .sortOrder(0)
+                    .build();
+            baseMapper.insert(groupDO);
+        } finally {
+            lock.unlock();
         }
-        GroupDO groupDO = GroupDO.builder()
-                .gid(gid)
-                .name(groupName)
-                .username(username)
-                .sortOrder(0)
-                .build();
-        baseMapper.insert(groupDO);
+
     }
 
     //根据用户名获取短链接集合
@@ -85,7 +113,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
             Optional<ShortLinkGroupCountQueryRespDTO> first
                     = listResult.getData().stream().filter(item -> Objects.equals(item.getGid(), each.getGid()))
                     .findFirst();
-           //设置每个分组短链接数量
+            //设置每个分组短链接数量
             first.ifPresent(item -> each.setShortLinkCount(first.get().getShortLinkCount()));
         });
         return shortLinkGroupRespDTOList;
@@ -134,7 +162,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
 
     //判断是否生成的gid是否重复
-    private boolean hasGid(String username,String gid) {
+    private boolean hasGid(String username, String gid) {
         //TODO 获取用户名
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)
