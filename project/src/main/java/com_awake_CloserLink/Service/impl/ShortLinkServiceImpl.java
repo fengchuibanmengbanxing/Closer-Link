@@ -567,7 +567,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             //该工具类只要内容不更改生成的数据仍是一样
             shortUri = HashUtil.hashToBase62(originUrl);
             //布隆过滤器不包含一定就不包含
-            if (!shortLinkCreatCachePenetrationBloomFilter.contains(shortLinkCreatReqDTO.getDomain() + "/" + shortUri)) {
+            if (!shortLinkCreatCachePenetrationBloomFilter.contains(createDomainDefault + "/" + shortUri)) {
                 break;
             }
             creatgenerateSuffix++;
