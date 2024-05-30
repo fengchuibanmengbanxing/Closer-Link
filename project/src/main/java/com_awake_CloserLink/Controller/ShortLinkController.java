@@ -1,6 +1,8 @@
 package com_awake_CloserLink.Controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com_awake_CloserLink.Common.Constant.Web.CustomBlockHandler;
 import com_awake_CloserLink.Common.Convention.result.Result;
 import com_awake_CloserLink.Common.Convention.result.Results;
 import com_awake_CloserLink.Dto.Req.ShortLinkCreatReqDTO;
@@ -31,6 +33,11 @@ public class ShortLinkController {
      * 创建短链接
      */
     @PostMapping("/api/short-link/v1/creat")
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandlerMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
     public Result<ShortLinkCreatRespDTO> creatShortLink(@RequestBody ShortLinkCreatReqDTO shortLinkCreatReqDTO) {
         shortLinkService.creatShortLink(shortLinkCreatReqDTO);
         return Results.success(null);
