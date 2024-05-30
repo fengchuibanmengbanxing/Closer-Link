@@ -20,7 +20,7 @@ public interface LinkNetworkStatsMapper {
             "t_link_network_stats (gid,full_short_url,date,cnt,network,create_time,update_time,del_flag) " +
             "VALUES(#{linkNetworkStats.gid}, #{linkNetworkStats.fullShortUrl}, #{linkNetworkStats.date}, #{linkNetworkStats.cnt},  #{linkNetworkStats.network}, NOW(), NOW(), 0) " +
             "ON DUPLICATE KEY UPDATE cnt = cnt + #{linkNetworkStats.cnt}")
-    void shortLinkStatsIp(@Param("linkNetworkStats") LinkNetworkStatsDO linkNetworkStatsDO);
+    void shortLinkStatsNetwork(@Param("linkNetworkStats") LinkNetworkStatsDO linkNetworkStatsDO);
 
 //      根据短链接获取指定日期内访问网络监控数据
 
