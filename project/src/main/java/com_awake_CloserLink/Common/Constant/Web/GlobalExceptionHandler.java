@@ -1,4 +1,4 @@
-package com_awake_CloserLink.Common.Web;
+package com_awake_CloserLink.Common.Constant.Web;
 
 /**
  * @Author 清醒
