@@ -130,7 +130,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         //避免第三方多次登录使用hash结构(一个用户可以登录多次直接返回最新token不再重复加入reids)
         Map<Object, Object> hasMaps = stringRedisTemplate.opsForHash().entries("login:" + userDO.getUsername());
         if(!CollectionUtils.isEmpty(hasMaps)){
-          String token=hasMaps.keySet().stream().findFirst().map(Object::toString).orElseThrow(() -> new ClientException("用户登录错误！"));
+            stringRedisTemplate.expire("login:" + userLoginReqDTO.getUsername(), 30, TimeUnit.DAYS);
+            String token=hasMaps.keySet().stream().findFirst().map(Object::toString).orElseThrow(() -> new ClientException("用户登录错误！"));
         return new UserLoginRespDTO(token);
         }
 
