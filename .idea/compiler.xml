@@ -7,10 +7,15 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="project" />
-        <module name="admin" />
-        <module name="gateway" />
+        <module name="CloserLink-gateway" />
+        <module name="CloserLink-project" />
+        <module name="CloserLink-admin" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="admin" target="17" />
+      <module name="gateway" target="17" />
+      <module name="project" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>

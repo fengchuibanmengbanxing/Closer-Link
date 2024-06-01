@@ -12,13 +12,30 @@ spring:
       host: 192.168.188.123
       port: 6379
       password: 826929
-      channel-topic:
-        short-link-stats: 'short_link:stats-stream'
-        short-link-stats-group: 'short_link:stats-stream:only-group'
+  rabbitmq:
+    host: 192.168.188.123
+    port: 5672
+    username: root
+    password: 826929
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        prefetch: 1
+        acknowledge-mode: manual
+        concurrency: 3
+  application:
+    name: short-link-project
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
   mvc:
     view:
       prefix: /templates/
       suffix: .html
+
+
 mybatis:
   #  引入配置文件
   #  config-location: classpath:/mybatis-config.xml
@@ -40,4 +57,7 @@ goto-domain:
       - zhihu.com
       - juejin.cn
       - cnblogs.com
+      - yuque.com
+      - bilibili.com
+      - taobao.com
 

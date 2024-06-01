@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!--接口全类名-->
-<mapper namespace="com_awake_CloserLink.Mapper.ShortLinkMapper">
+<mapper namespace="com.awake.CloserLink.project.Mapper.ShortLinkMapper">
 
-    <resultMap id="linkCountRespDTOResultMap" type="com_awake_CloserLink.Dto.Resp.ShortLinkGroupCountQueryRespDTO">
+    <resultMap id="linkCountRespDTOResultMap" type="com.awake.CloserLink.project.Dto.Resp.ShortLinkGroupCountQueryRespDTO">
         <id property="gid" column="gid"/>
         <result property="shortLinkCount" column="count(*)"/>
     </resultMap>
@@ -22,7 +22,7 @@
     <!--    COALESCE(t_link_stats_today.today_pv, 0) as today_pv,-->
     <!--    COALESCE(t_link_stats_today.today_uv, 0) as today_uv,-->
     <!--    COALESCE(t_link_stats_today.today_ip_count, 0) as today_ip_count-->
-    <select id="pageLink" resultType="com_awake_CloserLink.Entitys.LinkDO">
+    <select id="pageLink" resultType="com.awake.CloserLink.project.Entitys.LinkDO">
         SELECT t_link.*,
         t_link_stats_today.today_pv as today_pv,
         t_link_stats_today.today_uv as today_uv,

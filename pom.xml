@@ -18,7 +18,6 @@
         <module>gateway</module>
     </modules>
 
-
     <distributionManagement>
         <site>
             <id>website</id>
@@ -42,8 +41,8 @@
         <redisson.version>3.21.3</redisson.version>
         <guava.version>30.0-jre</guava.version>
         <jsoup.version>1.15.3</jsoup.version>
-    </properties>
 
+    </properties>
 
     <dependencies>
         <dependency>
@@ -131,6 +130,7 @@
                 <artifactId>jsoup</artifactId>
                 <version>${jsoup.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
