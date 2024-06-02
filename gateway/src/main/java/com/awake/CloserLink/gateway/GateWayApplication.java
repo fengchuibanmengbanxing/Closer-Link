@@ -8,9 +8,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Date 2024/5/31 21:25
  */
 @SpringBootApplication
-public class GateWay {
+public class GateWayApplication {
     public static void main(String[] args) {
-        SpringApplication.run(GateWay.class, args);
+        SpringApplication.run(GateWayApplication.class, args);
     }
 }
 
