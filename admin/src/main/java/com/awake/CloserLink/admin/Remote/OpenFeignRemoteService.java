@@ -17,7 +17,7 @@ import java.util.List;
  * @Author 清醒
  * @Date 2024/5/31 20:17
  */
-@FeignClient("short-link-project")
+@FeignClient(value = "short-link-project", url = "${aggregation.remote-url:}")
 public interface OpenFeignRemoteService {
     /**
      * 创建短链接
