@@ -2,6 +2,7 @@ package com.awake.CloserLink.admin.Service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson2.JSON;
+import com.awake.CloserLink.admin.Common.Biz.UserContext;
 import com.awake.CloserLink.admin.Common.Constant.RedisCacheConstant;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -26,10 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.awake.CloserLink.admin.Common.Enums.UserErrorCodeEnum.USER_NAME_EXIST_ERROR;
+import static com.awake.CloserLink.admin.Common.Enums.UserErrorCodeEnum.USER_NAME_UPDATE_ERROR;
 
 /**
  * @Author 清醒
@@ -86,6 +89,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
         try {
             if (lock.tryLock()) {
+                //如果没获取到说明这个用户民=名 大概率被其他人用了直接返回错误
+                if (!lock.tryLock()) {
+                    throw new ClientException(USER_NAME_EXIST_ERROR);
+                }
                 //写入数据库
                 int insert = baseMapper.insert(BeanUtil.toBean(userRegister, UserDO.class));
                 if (insert < 1) {
@@ -93,7 +100,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 }
                 //加入布隆过滤器
                 userRegisterCachePenetrationBloomFilter.add(userRegister.getUsername());
-                groupService.saveGroup(userRegister.getUsername(),"默认分组");
+                groupService.saveGroup(userRegister.getUsername(), "默认分组");
             } else {
                 throw new ClientException(USER_NAME_EXIST_ERROR);
             }
