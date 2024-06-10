@@ -14,6 +14,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="admin" target="17" />
+      <module name="aggregation" target="17" />
       <module name="gateway" target="17" />
       <module name="project" target="17" />
     </bytecodeTargetLevel>
