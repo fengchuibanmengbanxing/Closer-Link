@@ -49,6 +49,11 @@ public class ShortLinkController {
      * @return
      */
     @GetMapping("/api/short-link/v1/page")
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandlerMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
     public Result<IPage<ShortLinkPageRespDTO>> pageLink( ShortLinkPageReqDTO shortLinkPageReqDTO){
         return Results.success(shortLinkService.pageLink(shortLinkPageReqDTO));
     }
@@ -59,6 +64,11 @@ public class ShortLinkController {
      * @return
      */
     @GetMapping("/api/short-link/v1/count")
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandlerMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
     public Result<List<ShortLinkGroupCountQueryRespDTO>> countShortLink(@RequestParam("requestParam") List<String> RequestParam ){
         return Results.success(shortLinkService.countShortLink(RequestParam));
     }
@@ -69,6 +79,11 @@ public class ShortLinkController {
      * @return
      */
     @PostMapping("/api/short-link/v1/update")
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandlerMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO){
         shortLinkService.updateShortLink(shortLinkUpdateReqDTO);
         return Results.success();
@@ -82,18 +97,13 @@ public class ShortLinkController {
      * @throws IOException
      */
     @GetMapping("/{short-link}")
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandlerMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
     public void restoreUrl(@PathVariable ("short-link") String shortLink, ServletResponse response, ServletRequest request) throws IOException {
         shortLinkService.restoreUrl(shortLink,request,response);
     }
-
-//    /**
-//     * 分页查询短链接
-//
-//     * @throws IOException
-//     */
-//    @PostMapping("/api/short-link/v1/update")
-//    public Result<IPage<ShortLinkPageRespDTO>> pageLink(@RequestBody ShortLinkPageReqDTO shortLinkPageReqDTO )  {
-//        return Results.success(shortLinkService.pageLink(shortLinkPageReqDTO));
-//    }
 
 }
