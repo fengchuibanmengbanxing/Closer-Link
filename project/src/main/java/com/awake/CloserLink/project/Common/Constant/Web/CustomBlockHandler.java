@@ -11,7 +11,11 @@ import com.awake.CloserLink.project.Dto.Resp.ShortLinkCreatRespDTO;
  */
 public class CustomBlockHandler {
 
-    public static Result<ShortLinkCreatRespDTO> createShortLinkBlockHandlerMethod(ShortLinkCreatReqDTO requestParam, BlockException exception) {
-        return new Result<ShortLinkCreatRespDTO>().setCode("B100000").setMessage("当前访问网站人数过多，请稍后再试...");
+    public static Result<ShortLinkCreatRespDTO> createShortLinkBlockHandlerMethod
+            (ShortLinkCreatReqDTO requestParam, BlockException exception) {
+        return new Result<ShortLinkCreatRespDTO>()
+                .setCode("B100000")
+                .setMessage("当前访问网站人数过多，请稍后再试...");
     }
+
 }
