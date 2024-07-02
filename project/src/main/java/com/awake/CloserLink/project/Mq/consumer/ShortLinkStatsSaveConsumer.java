@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.rmi.ServerException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,13 +70,33 @@ public class ShortLinkStatsSaveConsumer {
             exchange = @Exchange(value = MQConstant.CONFIRM_EXCHANGE_NAME),
             key = {MQConstant.CONFIRM_ROUTING_KEY}))
     public void getMessage(Message message, Channel channel) throws IOException {
-        //获取消息
-        String jsonString = new String(message.getBody(), StandardCharsets.UTF_8);
-        ShortLinkStatsRecordDTO shortLinkStatsRecordDTO = JSON.parseObject(jsonString, ShortLinkStatsRecordDTO.class);
-        //幂等性处理
-        actualSaveShortLinkStats(shortLinkStatsRecordDTO);
-        //确认消息
-        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        //获取消息Id
+        String messageId = message.getMessageProperties().getMessageId();
+        //判断消息是否被消费过
+        if (!messageQueueIdempotentHandler.isMessageBeingConsumed(messageId)) {
+            //判断消息是否是因为其他原因而消费中断
+            if (messageQueueIdempotentHandler.isAccomplish(messageId)) {
+                return;
+            }
+            //抛出异常让RabbitMQ重试
+           throw new ServerException("消息未被消费需要消息队列重试！");
+        }
+        try {
+            //获取消息
+            String jsonString = new String(message.getBody(), StandardCharsets.UTF_8);
+            ShortLinkStatsRecordDTO shortLinkStatsRecordDTO = JSON.parseObject(jsonString, ShortLinkStatsRecordDTO.class);
+            //幂等性处理
+            actualSaveShortLinkStats(shortLinkStatsRecordDTO);
+            //确认消息
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Throwable e) {
+            //中间消费失败抛出异常删除redis中记录
+            messageQueueIdempotentHandler.delMessageProcessed(messageId);
+           log.error("消息执行失败！");
+        }
+        //将消息在redis中状态设置完全完成
+        messageQueueIdempotentHandler.setAccomplish(messageId);
+
     }
 
     @Transactional(rollbackFor = Exception.class)
