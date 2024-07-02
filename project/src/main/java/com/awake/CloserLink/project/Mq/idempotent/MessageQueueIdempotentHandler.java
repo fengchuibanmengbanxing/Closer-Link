@@ -21,7 +21,6 @@ public class MessageQueueIdempotentHandler {
 
     /**
      * 判断当前消息是否消费过
-     *
      * @param messageId 消息唯一标识
      * @return 消息是否消费过
      */
@@ -32,7 +31,6 @@ public class MessageQueueIdempotentHandler {
 
     /**
      * 判断消息消费流程是否执行完成
-     *
      * @param messageId 消息唯一标识
      * @return 消息是否执行完成
      */
