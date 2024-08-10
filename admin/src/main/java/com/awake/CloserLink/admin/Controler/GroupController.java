@@ -63,13 +63,16 @@ public class GroupController {
         return Results.success();
     }
 
-
+    /**
+     * 对短链接分组进行排序
+     * @param
+     * @return
+     */
     @PostMapping("/api/short-link/admin/v1/group/sort")
     public Result<Void>sortGroup(@RequestBody List<ShortLinkSortGroupReqDTO> shortLinkSortGroupReqDTOList){
         //对集合中的数据进行排序根据sortOrder
         groupService.sortGroup(shortLinkSortGroupReqDTOList);
         return Results.success();
     }
-
 
 }
