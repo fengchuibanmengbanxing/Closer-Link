@@ -60,7 +60,7 @@ public interface OpenFeignRemoteService {
      * @param url
      * @return
      */
-    @GetMapping("/api/short-link/title")
+    @GetMapping("/api/short-link/admin/v1/title")
     Result<String> getUrlTitle(@RequestParam("url") String url);
 
     /**
