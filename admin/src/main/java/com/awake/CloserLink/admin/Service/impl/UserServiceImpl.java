@@ -89,7 +89,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
         try {
             if (lock.tryLock()) {
-                //如果没获取到说明这个用户民=名 大概率被其他人用了直接返回错误
+                //如果没获取到说明这个用户名 大概率被其他人用了直接返回错误
                 if (!lock.tryLock()) {
                     throw new ClientException(USER_NAME_EXIST_ERROR);
                 }
