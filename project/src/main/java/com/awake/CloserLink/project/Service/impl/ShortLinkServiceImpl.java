@@ -103,6 +103,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     public ShortLinkCreatRespDTO creatShortLink(ShortLinkCreatReqDTO shortLinkCreatReqDTO) {
         verificationWhitelist(shortLinkCreatReqDTO.getOriginUrl());
         //短链接后缀
+        //生成短链接
         String generateSuffix = generateSuffix(shortLinkCreatReqDTO);
         LinkDO shortLinkDO = BeanUtil.toBean(shortLinkCreatReqDTO, LinkDO.class);
         String fullShortUrl;
@@ -144,6 +145,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
 //            }
         }
         //缓存预热  创建短链接后就将其放入redis中
+        //将原始链接放入redis
         stringRedisTemplate.opsForValue().set(String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortUrl), shortLinkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
         shortLinkCreatCachePenetrationBloomFilter.add(fullShortUrl);
 
@@ -225,6 +227,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             baseMapper.update(linkdo, updateWrapper);
 
         } else {
+
             RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(RedisKeyConstant.LOCK_GID_UPDATE_KEY, shortLinkUpdateReqDTO.getFullShortUrl()));
             RLock rLock = readWriteLock.writeLock();
             rLock.lock();
@@ -259,6 +262,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                         .delTime(0L)
                         .build();
                 baseMapper.insert(linkDO);
+
+
                 //由于gid发生改变因此需要更给goto表的关系链接
                 LambdaQueryWrapper<LinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(LinkGotoDO.class)
                         .eq(LinkGotoDO::getFullShortUrl, shortLinkUpdateReqDTO.getFullShortUrl())
@@ -275,7 +280,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 rLock.unlock();
             }
         }
-
         //新数据与旧数据有效类型，过期时间，原始网址是否相等
         if (!Objects.equals(hasLinkDO.getValidDateType(), shortLinkUpdateReqDTO.getValidDateType())
                 || !Objects.equals(hasLinkDO.getValidDate(), shortLinkUpdateReqDTO.getValidDate())
@@ -316,14 +320,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             return;
         }
         ShortLinkStatsRecordDTO statsRecord = buildLinkStatsRecordAndSetUser(fullShortLink, request, response);
-
+        //根据短链接获取原始链接
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortLink));
+        //非空则直接跳转
         if (StrUtil.isNotBlank(originalLink)) {
             shortLinkStats(fullShortLink, null, statsRecord);
             ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
         }
-
+        //此时reids中没有原始链接
+        //避免布隆过滤器造成的缓存穿透 之前加了空对象
         //存在则查询redis缓存判断是否为空对象
         String isNotnull = stringRedisTemplate.opsForValue().get(String.format(RedisKeyConstant.GOTO_IS_NOTNULL_SHORT_LINK_KEY, fullShortLink));
         if (StrUtil.isNotBlank(isNotnull)) {
@@ -338,6 +344,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             try {
                 //双重判定锁
                 originalLink = stringRedisTemplate.opsForValue().get(String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortLink));
+                //存在则直接跳转
                 if (StrUtil.isNotBlank(originalLink)) {
                     shortLinkStats(fullShortLink, null, statsRecord);
                     ((HttpServletResponse) response).sendRedirect(originalLink);
@@ -355,8 +362,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
                         .eq(LinkDO::getFullShortUrl, linkGotoDO.getFullShortUrl())
                         .eq(LinkDO::getDelFlag, 0)
-                        .eq(LinkDO::getEnableStatus, 1)
-                        .eq(LinkDO::getGid, linkGotoDO.getGid());
+                        .eq(LinkDO::getEnableStatus, 1);
+                // 此时尚未修改goto表 但是某个线程拿着短链接去redis与数据库获取gid去访问goto表找不到原始链接
+                // 从而错误设置空对象
+                //将原始链接也放入goto表中通过短链接直接获取原始链接
+//                        .eq(LinkDO::getGid, linkGotoDO.getGid());
                 LinkDO linkDO = baseMapper.selectOne(queryWrapper);
                 //网址跳转
 
@@ -369,6 +379,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 //过期后再设置默认时间()
                 stringRedisTemplate.opsForValue()
                         .set(String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortLink), linkDO.getOriginUrl(), LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()), TimeUnit.MILLISECONDS);
+                //重新将原始链接放入reids
                 shortLinkStats(fullShortLink, linkDO.getGid(), statsRecord);
                 ((HttpServletResponse) response).sendRedirect(linkDO.getOriginUrl());
 
