@@ -59,7 +59,7 @@ public class ShortLinkController {
     }
 
     /**
-     * 短链接分组集合
+     * 短链接分组集合以及每组链接数量
      * @param RequestParam
      * @return
      */
